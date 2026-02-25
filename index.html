@@ -1217,16 +1217,17 @@ function initRecognition() {
       const confidence = result[0].confidence || 0.9;
       
       if (result.isFinal) {
-        // Noise gate: skip if volume is below threshold
-        if (noiseGateActive && !isVoiceDetected && currentVolume < volumeThreshold * 0.8) {
-          console.log('Noise gate filtered (low volume):', text);
+        // Confidence & pattern filter (catches music artifacts)
+        if (isLikelyNoise(text, confidence)) {
+          console.log('Noise filtered (pattern/confidence):', text, confidence);
           removeInterim();
           continue;
         }
         
-        // Confidence & pattern filter
-        if (isLikelyNoise(text, confidence)) {
-          console.log('Noise filtered (pattern/confidence):', text, confidence);
+        // Noise gate: only filter if volume is very clearly below threshold
+        // Use a lenient check - voice may have already faded by the time result arrives
+        if (noiseGateActive && currentVolume < volumeThreshold * 0.3) {
+          console.log('Noise gate filtered (very low volume):', text, currentVolume);
           removeInterim();
           continue;
         }
@@ -1239,10 +1240,7 @@ function initRecognition() {
     }
     
     if (interimTranscript) {
-      // Show interim only if voice is detected or noise gate is not active
-      if (!noiseGateActive || isVoiceDetected) {
-        showInterim(interimTranscript);
-      }
+      showInterim(interimTranscript);
     }
   };
   

@@ -1,6 +1,6 @@
 {
-  "name": "KoeTomo - 声とも",
-  "short_name": "KoeTomo",
+  "name": "KoeOkosi - 声おこし",
+  "short_name": "KoeOkosi",
   "description": "通話中の音声をリアルタイムで文字に変換するアプリ",
   "start_url": "/",
   "display": "standalone",

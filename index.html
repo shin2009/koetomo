@@ -335,6 +335,28 @@ body::before {
   font-style: normal;
 }
 
+.transcript-line .translated {
+  display: block;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(45, 138, 86, 0.08);
+  border-radius: 8px;
+  font-size: 0.85em;
+  color: var(--green-deep);
+  font-style: normal;
+  line-height: 1.6;
+}
+
+.transcript-line .translated::before {
+  content: '🌐 ';
+  font-size: 0.8em;
+}
+
+.translate-active {
+  opacity: 1 !important;
+  background: rgba(255,255,255,0.3) !important;
+}
+
 .transcript-empty {
   text-align: center;
   padding: 60px 20px;
@@ -944,6 +966,7 @@ body::before {
     </div>
   </div>
   <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">EN</button>
+  <button class="lang-toggle" id="translateToggle" onclick="toggleTranslate()" style="margin-left:6px; opacity:0.6">訳</button>
 </header>
 
 <!-- PWA Install Banner -->
@@ -1175,6 +1198,58 @@ const i18n = {
 
 let currentLang = 'ja';
 let recognitionLang = 'ja-JP';
+let translateEnabled = false;
+
+// ===== Translation =====
+async function translateText(text, sourceLang, targetLang) {
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data[0].map(item => item[0]).join('');
+  } catch(e) {
+    console.warn('Translation failed:', e);
+    return null;
+  }
+}
+
+function getTranslatePair() {
+  // Source = recognition language, Target = the other language
+  if (recognitionLang.startsWith('ja')) {
+    return { source: 'ja', target: 'en' };
+  } else {
+    return { source: 'en', target: 'ja' };
+  }
+}
+
+function toggleTranslate() {
+  translateEnabled = !translateEnabled;
+  const btn = document.getElementById('translateToggle');
+  
+  if (translateEnabled) {
+    btn.classList.add('translate-active');
+    btn.textContent = currentLang === 'ja' ? '訳✓' : 'TR✓';
+    // Translate existing lines
+    retranslateAll();
+  } else {
+    btn.classList.remove('translate-active');
+    btn.textContent = currentLang === 'ja' ? '訳' : 'TR';
+    // Remove translations from display
+    document.querySelectorAll('.translated').forEach(el => el.remove());
+    // Clear stored translations
+    transcriptLines.forEach(line => delete line.translation);
+  }
+}
+
+async function retranslateAll() {
+  const pair = getTranslatePair();
+  for (const line of transcriptLines) {
+    if (!line.translation) {
+      line.translation = await translateText(line.text, pair.source, pair.target);
+    }
+  }
+  renderTranscript();
+}
 
 function toggleLanguage() {
   currentLang = currentLang === 'ja' ? 'en' : 'ja';
@@ -1182,6 +1257,14 @@ function toggleLanguage() {
   
   document.getElementById('langToggle').textContent = currentLang === 'ja' ? 'EN' : 'JA';
   document.getElementById('statusLang').textContent = i18n[currentLang].langLabel;
+  
+  // Update translate button text
+  const trBtn = document.getElementById('translateToggle');
+  if (translateEnabled) {
+    trBtn.textContent = currentLang === 'ja' ? '訳✓' : 'TR✓';
+  } else {
+    trBtn.textContent = currentLang === 'ja' ? '訳' : 'TR';
+  }
   
   // Update all i18n elements
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -1529,7 +1612,20 @@ function addTranscriptLine(text, isFinal) {
   });
   
   if (isFinal) {
-    transcriptLines.push({ text, time });
+    const lineObj = { text, time };
+    transcriptLines.push(lineObj);
+    
+    // Auto-translate if enabled
+    if (translateEnabled) {
+      const pair = getTranslatePair();
+      translateText(text, pair.source, pair.target).then(translated => {
+        if (translated) {
+          lineObj.translation = translated;
+          renderTranscript();
+          scrollToBottom();
+        }
+      });
+    }
   }
   
   renderTranscript();
@@ -1579,7 +1675,14 @@ function renderTranscript() {
     const div = document.createElement('div');
     div.className = 'transcript-line final';
     div.style.fontSize = fontSizes[currentFontSize] + 'rem';
-    div.innerHTML = `${line.text}<span class="timestamp">${line.time}</span>`;
+    
+    let html = `${line.text}`;
+    if (translateEnabled && line.translation) {
+      html += `<span class="translated">${line.translation}</span>`;
+    }
+    html += `<span class="timestamp">${line.time}</span>`;
+    div.innerHTML = html;
+    
     fragment.appendChild(div);
   });
   

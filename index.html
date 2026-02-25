@@ -706,6 +706,99 @@ body::before {
   font-family: inherit;
 }
 
+/* ===== NOISE GATE INDICATOR ===== */
+.noise-gate-bar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  background: var(--warm-white);
+  border-bottom: 1px solid rgba(45, 138, 86, 0.1);
+  font-size: 0.75rem;
+  color: var(--text-mid);
+  position: relative;
+  z-index: 1;
+}
+
+.noise-gate-bar.visible {
+  display: flex;
+}
+
+.noise-gate-bar label {
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.volume-meter-container {
+  flex: 1;
+  height: 8px;
+  background: #e8e8e4;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.volume-meter-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--green-light);
+  border-radius: 4px;
+  transition: width 0.1s;
+}
+
+.volume-meter-fill.loud {
+  background: var(--green-main);
+}
+
+.volume-meter-fill.quiet {
+  background: var(--text-light);
+}
+
+.threshold-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--red-stop);
+  z-index: 1;
+}
+
+.sensitivity-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sensitivity-btn {
+  background: var(--green-pale);
+  border: 1px solid rgba(45, 138, 86, 0.2);
+  color: var(--green-deep);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.sensitivity-btn:active {
+  background: var(--green-main);
+  color: white;
+}
+
+.sensitivity-label {
+  font-size: 0.7rem;
+  min-width: 20px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--green-deep);
+}
+
 /* Unsupported browser notice */
 .unsupported-notice {
   display: none;
@@ -754,6 +847,20 @@ body::before {
   <div class="status-dot" id="statusDot"></div>
   <span class="status-text" id="statusText" data-i18n="statusReady">マイクの準備ができています</span>
   <span class="status-lang" id="statusLang">日本語</span>
+</div>
+
+<!-- Noise Gate Bar -->
+<div class="noise-gate-bar" id="noiseGateBar">
+  <label data-i18n="noiseGateLabel">🔇 感度</label>
+  <div class="volume-meter-container">
+    <div class="threshold-line" id="thresholdLine" style="left: 15%"></div>
+    <div class="volume-meter-fill" id="volumeMeter"></div>
+  </div>
+  <div class="sensitivity-control">
+    <button class="sensitivity-btn" onclick="adjustThreshold(-5)">−</button>
+    <span class="sensitivity-label" id="sensitivityLabel">中</span>
+    <button class="sensitivity-btn" onclick="adjustThreshold(5)">＋</button>
+  </div>
 </div>
 
 <!-- Main Content -->
@@ -867,6 +974,7 @@ const i18n = {
     cleared: '会話をクリアしました',
     saved: '会話を保存しました',
     langLabel: '日本語',
+    noiseGateLabel: '🔇 感度',
     confirmClear: '会話内容をクリアしますか？',
     confirmDelete: 'この会話を削除しますか？',
   },
@@ -898,6 +1006,7 @@ const i18n = {
     cleared: 'Conversation cleared',
     saved: 'Conversation saved',
     langLabel: 'English',
+    noiseGateLabel: '🔇 Sensitivity',
     confirmClear: 'Clear the conversation?',
     confirmDelete: 'Delete this conversation?',
   }
@@ -943,6 +1052,141 @@ let isListening = false;
 let transcriptLines = [];
 let interimElement = null;
 
+// ===== Noise Gate (Web Audio API) =====
+let audioContext = null;
+let analyser = null;
+let micStream = null;
+let noiseGateActive = false;
+let currentVolume = 0;
+let volumeThreshold = 15; // 0-100, default 15%
+let isVoiceDetected = false;
+let volumeAnimFrame = null;
+
+const sensitivityLevels = {
+  ja: { 5: '高', 10: '中高', 15: '中', 25: '中低', 35: '低' },
+  en: { 5: 'High', 10: 'Med+', 15: 'Med', 25: 'Med-', 35: 'Low' }
+};
+
+async function initNoiseGate() {
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(micStream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = 0.4;
+    source.connect(analyser);
+    
+    noiseGateActive = true;
+    monitorVolume();
+    document.getElementById('noiseGateBar').classList.add('visible');
+    updateThresholdUI();
+    return true;
+  } catch(e) {
+    console.warn('Noise gate init failed:', e);
+    return false;
+  }
+}
+
+function monitorVolume() {
+  if (!noiseGateActive || !analyser) return;
+  
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(dataArray);
+  
+  // Calculate RMS volume (focus on voice frequency range ~300-3000Hz)
+  const sampleRate = audioContext.sampleRate;
+  const binSize = sampleRate / analyser.fftSize;
+  const startBin = Math.floor(300 / binSize);
+  const endBin = Math.min(Math.floor(3000 / binSize), dataArray.length);
+  
+  let sum = 0;
+  let count = 0;
+  for (let i = startBin; i < endBin; i++) {
+    sum += dataArray[i] * dataArray[i];
+    count++;
+  }
+  
+  const rms = count > 0 ? Math.sqrt(sum / count) : 0;
+  currentVolume = Math.min(100, (rms / 255) * 150); // Normalize to 0-100
+  
+  isVoiceDetected = currentVolume > volumeThreshold;
+  
+  // Update volume meter UI
+  const meter = document.getElementById('volumeMeter');
+  if (meter) {
+    meter.style.width = currentVolume + '%';
+    meter.className = 'volume-meter-fill' + (isVoiceDetected ? ' loud' : ' quiet');
+  }
+  
+  volumeAnimFrame = requestAnimationFrame(monitorVolume);
+}
+
+function adjustThreshold(delta) {
+  volumeThreshold = Math.max(5, Math.min(35, volumeThreshold + delta));
+  updateThresholdUI();
+}
+
+function updateThresholdUI() {
+  const line = document.getElementById('thresholdLine');
+  const label = document.getElementById('sensitivityLabel');
+  
+  if (line) line.style.left = volumeThreshold + '%';
+  
+  if (label) {
+    const levels = sensitivityLevels[currentLang];
+    // Find closest level
+    const keys = Object.keys(levels).map(Number).sort((a, b) => a - b);
+    let closest = keys[0];
+    for (const k of keys) {
+      if (Math.abs(k - volumeThreshold) <= Math.abs(closest - volumeThreshold)) {
+        closest = k;
+      }
+    }
+    label.textContent = levels[closest];
+  }
+}
+
+function stopNoiseGate() {
+  noiseGateActive = false;
+  if (volumeAnimFrame) cancelAnimationFrame(volumeAnimFrame);
+  if (audioContext && audioContext.state !== 'closed') {
+    audioContext.close().catch(() => {});
+  }
+  if (micStream) {
+    micStream.getTracks().forEach(track => track.stop());
+    micStream = null;
+  }
+  document.getElementById('noiseGateBar').classList.remove('visible');
+}
+
+// ===== Confidence & Noise Filtering =====
+function isLikelyNoise(text, confidence) {
+  // Filter by confidence score (if available)
+  if (confidence < 0.5) return true;
+  
+  // Filter very short meaningless text
+  const cleaned = text.trim();
+  if (cleaned.length <= 1) return true;
+  
+  // Filter repetitive single characters (music artifacts like "ああああ", "ラララ")
+  if (/^(.)\1{3,}$/.test(cleaned)) return true;
+  
+  // Filter common music recognition artifacts
+  const musicPatterns = [
+    /^[ふはあうおんーっ]{1,4}$/,
+    /^(ラ|ル|リ|レ|ロ|ダ|パ|タ|ナ){2,}$/,
+    /^(la|na|da|ba|pa|ta){2,}$/i,
+    /^(oh|ah|ooh|yeah|hmm){1,3}$/i,
+  ];
+  
+  for (const pattern of musicPatterns) {
+    if (pattern.test(cleaned)) return true;
+  }
+  
+  return false;
+}
+
 function initRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   
@@ -970,8 +1214,23 @@ function initRecognition() {
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const result = event.results[i];
       const text = result[0].transcript;
+      const confidence = result[0].confidence || 0.9;
       
       if (result.isFinal) {
+        // Noise gate: skip if volume is below threshold
+        if (noiseGateActive && !isVoiceDetected && currentVolume < volumeThreshold * 0.8) {
+          console.log('Noise gate filtered (low volume):', text);
+          removeInterim();
+          continue;
+        }
+        
+        // Confidence & pattern filter
+        if (isLikelyNoise(text, confidence)) {
+          console.log('Noise filtered (pattern/confidence):', text, confidence);
+          removeInterim();
+          continue;
+        }
+        
         addTranscriptLine(text, true);
         removeInterim();
       } else {
@@ -980,7 +1239,10 @@ function initRecognition() {
     }
     
     if (interimTranscript) {
-      showInterim(interimTranscript);
+      // Show interim only if voice is detected or noise gate is not active
+      if (!noiseGateActive || isVoiceDetected) {
+        showInterim(interimTranscript);
+      }
     }
   };
   
@@ -1029,7 +1291,10 @@ function toggleListening() {
   }
 }
 
-function startListening() {
+async function startListening() {
+  // Initialize noise gate first
+  await initNoiseGate();
+  
   recognition.lang = recognitionLang;
   try {
     recognition.start();
@@ -1046,6 +1311,7 @@ function stopListening() {
     recognition.stop();
   } catch(e) {}
   removeInterim();
+  stopNoiseGate();
   updateUI();
   
   // Auto-save if there are lines

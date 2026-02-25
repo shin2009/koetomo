@@ -1217,17 +1217,9 @@ function initRecognition() {
       const confidence = result[0].confidence || 0.9;
       
       if (result.isFinal) {
-        // Confidence & pattern filter (catches music artifacts)
+        // Pattern filter (catches music artifacts like "ラララ")
         if (isLikelyNoise(text, confidence)) {
-          console.log('Noise filtered (pattern/confidence):', text, confidence);
-          removeInterim();
-          continue;
-        }
-        
-        // Noise gate: only filter if volume is very clearly below threshold
-        // Use a lenient check - voice may have already faded by the time result arrives
-        if (noiseGateActive && currentVolume < volumeThreshold * 0.3) {
-          console.log('Noise gate filtered (very low volume):', text, currentVolume);
+          console.log('Noise filtered:', text, confidence);
           removeInterim();
           continue;
         }
@@ -1290,7 +1282,7 @@ function toggleListening() {
 }
 
 async function startListening() {
-  // Start speech recognition FIRST
+  // Start speech recognition
   recognition.lang = recognitionLang;
   try {
     recognition.start();
@@ -1298,18 +1290,7 @@ async function startListening() {
     updateUI();
   } catch(e) {
     console.error('Start error:', e);
-    return;
   }
-  
-  // Then initialize noise gate (non-blocking)
-  // Small delay to avoid mic conflict
-  setTimeout(async () => {
-    try {
-      await initNoiseGate();
-    } catch(e) {
-      console.warn('Noise gate failed, continuing without it:', e);
-    }
-  }, 500);
 }
 
 function stopListening() {
@@ -1318,7 +1299,6 @@ function stopListening() {
     recognition.stop();
   } catch(e) {}
   removeInterim();
-  stopNoiseGate();
   updateUI();
   
   // Auto-save if there are lines

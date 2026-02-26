@@ -1433,9 +1433,35 @@ function isLikelyNoise(text, confidence) {
 
 function initRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  
+
+  // Debug info for troubleshooting
+  console.log('SpeechRecognition check:', {
+    'window.SpeechRecognition': !!window.SpeechRecognition,
+    'window.webkitSpeechRecognition': !!window.webkitSpeechRecognition,
+    'userAgent': navigator.userAgent
+  });
+
   if (!SpeechRecognition) {
-    document.getElementById('unsupportedNotice').classList.add('visible');
+    // Show debug info in the error message
+    const ua = navigator.userAgent;
+    const isAndroid = /Android/i.test(ua);
+    const isChrome = /Chrome/i.test(ua);
+    const isWebView = /wv|WebView/i.test(ua);
+    const isInApp = /Line|FBAV|Instagram|Twitter/i.test(ua);
+
+    console.error('Speech Recognition not supported:', {
+      isAndroid, isChrome, isWebView, isInApp, ua
+    });
+
+    // Show more helpful message
+    const notice = document.getElementById('unsupportedNotice');
+    if (isInApp) {
+      notice.innerHTML = '<p>⚠️ アプリ内ブラウザでは音声認識が使えません。<br><strong>Chromeアプリで開き直してください。</strong><br>（右上の「…」→「Chromeで開く」）</p>';
+    } else if (isWebView) {
+      notice.innerHTML = '<p>⚠️ このブラウザでは音声認識が使えません。<br><strong>Chromeアプリで開いてください。</strong></p>';
+    }
+    notice.classList.add('visible');
+
     document.getElementById('startBtn').disabled = true;
     document.getElementById('startBtn').style.opacity = '0.5';
     return;

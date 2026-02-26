@@ -1920,6 +1920,13 @@ function dismissInstall() {
   document.getElementById('installBanner').classList.remove('visible');
 }
 
+// ===== Lifecycle =====
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && isListening) {
+    stopListening();
+  }
+});
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
   initRecognition();

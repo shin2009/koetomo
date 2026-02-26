@@ -3,7 +3,7 @@
   "short_name": "KoeOkosi",
   "description": "通話中の音声をリアルタイムで文字に変換するアプリ",
   "start_url": "/",
-  "display": "standalone",
+  "display": "minimal-ui",
   "background_color": "#faf8f3",
   "theme_color": "#1a5632",
   "orientation": "portrait",

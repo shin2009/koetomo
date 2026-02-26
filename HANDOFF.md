@@ -12,20 +12,26 @@
 
 ## 技術スタック
 
-- **フロントエンド**: 単一のHTML/CSS/JSファイル（フレームワークなし）
+- **フロントエンド**: 静的HTML/CSS/JS（フレームワークなし）
 - **音声認識**: Web Speech API（ブラウザネイティブ）
 - **翻訳**: Google Translate 無料API（translate.googleapis.com）
 - **PWA**: manifest.json + Service Worker
 - **データ保存**: localStorage（会話ログ履歴）
+- **アクセス解析**: Google Analytics 4（測定ID: G-62SRPEPWGN）
+- **Firebase**: プロジェクト作成済み（koeokosi）、現時点ではGA4のみ使用
 - **デプロイ**: Vercel（GitHubのmainブランチにpushで自動デプロイ）
 
 ## ファイル構成
 
 ```
 koetomo/                  ※リポジトリ名はkoetomoのまま
-├── index.html            # メインアプリ（HTML/CSS/JS全部入り）
-├── manifest.json         # PWAマニフェスト
-├── sw.js                 # Service Worker
+├── index.html            # ランディングページ（日本語）
+├── en.html               # ランディングページ（英語）
+├── app.html              # メインアプリ（HTML/CSS/JS全部入り）
+├── privacy.html          # プライバシーポリシー（日本語）
+├── privacy-en.html       # プライバシーポリシー（英語）
+├── manifest.json         # PWAマニフェスト（start_url: /app.html）
+├── sw.js                 # Service Worker（キャッシュ: koetomo-v8）
 ├── icon-192.png          # PWAアイコン（192x192）
 └── icon-512.png          # PWAアイコン（512x512）
 ```
@@ -73,6 +79,29 @@ koetomo/                  ※リポジトリ名はkoetomoのまま
 - manifest.json でインストール可能
 - Service Worker でキャッシュ
 - iOS Safari のホーム画面追加ガイド表示
+
+### 8. ランディングページ
+- 日本語（index.html）・英語（en.html）の2ページ構成
+- ヒーロー、ターゲットユーザー、機能紹介、使い方、CTAセクション
+- 右上のEN/JAリンクで言語切り替え
+- フッターにプライバシーポリシーへのリンク
+
+### 9. Google Analytics 4（GA4）
+- 測定ID: G-62SRPEPWGN（Firebaseプロジェクト「koeokosi」と連携）
+- ランディングページ（index.html, en.html）とアプリ（app.html）の両方に設置
+- カスタムイベント:
+  - `start_listening` — 音声認識開始（言語情報付き）
+  - `stop_listening` — 音声認識停止（利用秒数、行数付き）
+  - `toggle_language` — 日英切り替え
+  - `toggle_translate` — 翻訳ON/OFF
+  - `change_font_size` — 文字サイズ変更
+  - `pwa_install` — PWAインストール（承諾/拒否）
+  - `view_history` — 会話ログ閲覧
+
+### 10. プライバシーポリシー
+- 日本語（privacy.html）・英語（privacy-en.html）
+- 現時点の内容: 音声データ非収集、localStorage保存、GA4の収集情報、Google翻訳API送信について
+- Firebase Auth・クラウド保存導入時に更新が必要
 
 ## 既知の課題・未実装
 
@@ -141,8 +170,15 @@ koetomo/                  ※リポジトリ名はkoetomoのまま
 - KA法で価値抽出 → ケーススタディ化
 - モニターからの口コミでユーザー拡大
 
+### インバウンド観光展開構想
+- 来日外国人にKoeOkosiを使ってもらい、観光体験データを収集
+- KoeOkosi（翻訳ツール）× ethnote5-app（体験記録）× EMA（分析）の一気通貫
+- ターゲット: 自治体観光課、ホテルチェーン、鉄道会社等
+- モニター募集: ゲストハウス提携（宿泊費割引と引き換え）
+
 ## 開発環境メモ
 - Windows PC（C:\Users\odagiri\Desktop\koetomo）
 - VS Code使用
 - Git / GitHub連携済み
 - Vercel Hobbyプラン（無料）
+- Firebaseプロジェクト: koeokosi（Sparkプラン・無料）

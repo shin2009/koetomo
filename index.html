@@ -1450,17 +1450,12 @@ function initRecognition() {
       isAndroid, isChrome, isWebView, isInApp, ua
     });
 
-    // Show debug info on screen for mobile troubleshooting
     const notice = document.getElementById('unsupportedNotice');
     if (isInApp) {
       notice.innerHTML = '<p>⚠️ アプリ内ブラウザでは音声認識が使えません。<br><strong>Chromeアプリで開き直してください。</strong><br>（右上の「…」→「Chromeで開く」）</p>';
     } else if (isWebView) {
       notice.innerHTML = '<p>⚠️ このブラウザでは音声認識が使えません。<br><strong>Chromeアプリで開いてください。</strong></p>';
     }
-    // Temporary debug info
-    notice.innerHTML += '<p style="font-size:10px;word-break:break-all;margin-top:8px;color:#666;">'
-      + '[DEBUG] SR=' + !!window.SpeechRecognition + ' wkSR=' + !!window.webkitSpeechRecognition
-      + '<br>UA=' + ua + '</p>';
     notice.classList.add('visible');
 
     document.getElementById('startBtn').disabled = true;

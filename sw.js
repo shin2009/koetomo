@@ -1,9 +1,11 @@
-const CACHE_NAME = 'koetomo-v7';
+const CACHE_NAME = 'koetomo-v8';
 const ASSETS = [
   '/',
   '/index.html',
   '/en.html',
   '/app.html',
+  '/privacy.html',
+  '/privacy-en.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'

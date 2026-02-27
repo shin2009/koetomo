@@ -678,6 +678,56 @@ body::before {
   50% { transform: scaleY(1.2); }
 }
 
+/* ===== FLIP MODE (reverse display) ===== */
+.flip-active .transcript-container {
+  transform: rotate(180deg);
+}
+
+.flip-active .transcript-header {
+  display: none;
+}
+
+.flip-active .font-control {
+  display: none !important;
+}
+
+.flip-active .transcript-body {
+  max-height: 70vh;
+}
+
+.flip-btn {
+  background: none;
+  border: none;
+  color: white;
+  padding: 4px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.flip-btn:hover, .flip-btn:active {
+  opacity: 1;
+}
+
+.flip-btn.active {
+  opacity: 1;
+}
+
+/* ===== WAKE LOCK INDICATOR ===== */
+.wakelock-indicator {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.wakelock-indicator.visible {
+  display: inline-flex;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 380px) {
   html { font-size: 16px; }
@@ -972,6 +1022,7 @@ body::before {
   </div>
   <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">EN</button>
   <button class="lang-toggle" id="translateToggle" onclick="toggleTranslate()" style="margin-left:6px; opacity:0.6">訳</button>
+  <button class="flip-btn" id="flipBtn" onclick="toggleFlip()" style="margin-left:4px;" title="画面反転">🔄</button>
 </header>
 
 <!-- PWA Install Banner -->
@@ -985,6 +1036,7 @@ body::before {
 <div class="status-bar">
   <div class="status-dot" id="statusDot"></div>
   <span class="status-text" id="statusText" data-i18n="statusReady">マイクの準備ができています</span>
+  <span class="wakelock-indicator" id="wakelockIndicator">🔒 <span data-i18n="screenOn">画面ON</span></span>
   <span class="status-lang" id="statusLang">日本語</span>
 </div>
 
@@ -1160,6 +1212,8 @@ const i18n = {
     autoSpeakerTip: 'iPhoneは<strong>自動でスピーカーにする設定</strong>ができます。<br>「設定」→「アクセシビリティ」→「タッチ」→「通話オーディオルーティング」→<strong>「スピーカー」</strong>を選択。<br>これで毎回の切替が不要になります。',
     confirmClear: '会話内容をクリアしますか？',
     confirmDelete: 'この会話を削除しますか？',
+    screenOn: '画面ON',
+    flipOn: '反転中',
   },
   en: {
     subtitle: 'Voice to text, heart to heart',
@@ -1198,6 +1252,8 @@ const i18n = {
     autoSpeakerTip: 'iPhone can <strong>auto-enable speaker</strong> for calls.<br>Go to Settings → Accessibility → Touch → Call Audio Routing → select <strong>"Speaker"</strong>.<br>No more manual switching!',
     confirmClear: 'Clear the conversation?',
     confirmDelete: 'Delete this conversation?',
+    screenOn: 'Screen ON',
+    flipOn: 'Flipped',
   }
 };
 
@@ -1567,6 +1623,7 @@ async function startListening() {
     isListening = true;
     listeningStartTime = Date.now();
     updateUI();
+    requestWakeLock();
     gtag('event', 'start_listening', { language: currentLang });
   } catch(e) {
     console.error('Start error:', e);
@@ -1581,6 +1638,7 @@ function stopListening() {
     recognition.stop();
   } catch(e) {}
   removeInterim();
+  releaseWakeLock();
   updateUI();
   gtag('event', 'stop_listening', { duration_seconds: duration, lines_count: transcriptLines.length });
   
@@ -1940,10 +1998,55 @@ function dismissInstall() {
   document.getElementById('installBanner').classList.remove('visible');
 }
 
+// ===== Wake Lock (Screen Always ON) =====
+let wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    document.getElementById('wakelockIndicator').classList.add('visible');
+    wakeLock.addEventListener('release', () => {
+      document.getElementById('wakelockIndicator').classList.remove('visible');
+      wakeLock = null;
+    });
+  } catch(e) {
+    console.warn('Wake Lock failed:', e);
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+}
+
+// ===== Flip Mode (Reverse Display) =====
+let flipMode = false;
+
+function toggleFlip() {
+  flipMode = !flipMode;
+  const main = document.querySelector('.main');
+  const btn = document.getElementById('flipBtn');
+
+  if (flipMode) {
+    main.classList.add('flip-active');
+    btn.classList.add('active');
+  } else {
+    main.classList.remove('flip-active');
+    btn.classList.remove('active');
+  }
+}
+
 // ===== Lifecycle =====
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && isListening) {
     stopListening();
+  }
+  // Re-acquire wake lock when page becomes visible (browser releases it on tab switch)
+  if (!document.hidden && isListening && !wakeLock) {
+    requestWakeLock();
   }
 });
 

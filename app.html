@@ -1263,24 +1263,27 @@ let recognitionLang = 'ja-JP';
 let translateEnabled = false;
 
 // ===== Translation =====
-async function translateText(text, sourceLang, targetLang) {
+async function translateText(text) {
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    // First pass: auto-detect language, translate to English
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetch(url);
     const data = await response.json();
-    return data[0].map(item => item[0]).join('');
+    const detectedLang = data[2]; // detected source language code
+
+    // Japanese detected -> translate to English (already done)
+    if (detectedLang === 'ja') {
+      return data[0].map(item => item[0]).join('');
+    }
+
+    // Other language detected -> translate to Japanese
+    const url2 = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ja&dt=t&q=${encodeURIComponent(text)}`;
+    const response2 = await fetch(url2);
+    const data2 = await response2.json();
+    return data2[0].map(item => item[0]).join('');
   } catch(e) {
     console.warn('Translation failed:', e);
     return null;
-  }
-}
-
-function getTranslatePair() {
-  // Source = recognition language, Target = the other language
-  if (recognitionLang.startsWith('ja')) {
-    return { source: 'ja', target: 'en' };
-  } else {
-    return { source: 'en', target: 'ja' };
   }
 }
 
@@ -1305,10 +1308,9 @@ function toggleTranslate() {
 }
 
 async function retranslateAll() {
-  const pair = getTranslatePair();
   for (const line of transcriptLines) {
     if (!line.translation) {
-      line.translation = await translateText(line.text, pair.source, pair.target);
+      line.translation = await translateText(line.text);
     }
   }
   renderTranscript();
@@ -1720,8 +1722,7 @@ function addTranscriptLine(text, isFinal) {
     
     // Auto-translate if enabled
     if (translateEnabled) {
-      const pair = getTranslatePair();
-      translateText(text, pair.source, pair.target).then(translated => {
+      translateText(text).then(translated => {
         if (translated) {
           lineObj.translation = translated;
           renderTranscript();

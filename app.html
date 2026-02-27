@@ -1719,30 +1719,30 @@ function addTranscriptLine(text, isFinal) {
         if (translated) {
           lineObj.translation = translated;
           renderTranscript();
-          scrollToBottom();
+          scrollToTop();
         }
       });
     }
   }
   
   renderTranscript();
-  scrollToBottom();
+  scrollToTop();
 }
 
 function showInterim(text) {
   const body = document.getElementById('transcriptBody');
   const empty = document.getElementById('transcriptEmpty');
-  
+
   if (empty) empty.style.display = 'none';
-  
+
   if (!interimElement) {
     interimElement = document.createElement('div');
     interimElement.className = 'transcript-line interim';
-    body.appendChild(interimElement);
+    body.insertBefore(interimElement, body.firstChild);
   }
-  
+
   interimElement.textContent = text;
-  scrollToBottom();
+  scrollToTop();
 }
 
 function removeInterim() {
@@ -1766,35 +1766,36 @@ function renderTranscript() {
   // Remove all final lines
   body.querySelectorAll('.transcript-line.final').forEach(el => el.remove());
   
-  // Re-render
+  // Re-render in reverse order (newest first)
   const fragment = document.createDocumentFragment();
-  transcriptLines.forEach(line => {
+  for (let i = transcriptLines.length - 1; i >= 0; i--) {
+    const line = transcriptLines[i];
     const div = document.createElement('div');
     div.className = 'transcript-line final';
     div.style.fontSize = fontSizes[currentFontSize] + 'rem';
-    
+
     let html = `${line.text}`;
     if (translateEnabled && line.translation) {
       html += `<span class="translated">${line.translation}</span>`;
     }
     html += `<span class="timestamp">${line.time}</span>`;
     div.innerHTML = html;
-    
+
     fragment.appendChild(div);
-  });
-  
-  // Insert before interim element if it exists
+  }
+
+  // Insert after interim element if it exists, otherwise at top
   if (interimElement) {
-    body.insertBefore(fragment, interimElement);
+    interimElement.after(fragment);
   } else {
-    body.appendChild(fragment);
+    body.insertBefore(fragment, body.firstChild);
   }
 }
 
-function scrollToBottom() {
+function scrollToTop() {
   const body = document.getElementById('transcriptBody');
   requestAnimationFrame(() => {
-    body.scrollTop = body.scrollHeight;
+    body.scrollTop = 0;
   });
 }
 

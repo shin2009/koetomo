@@ -1708,8 +1708,13 @@ function addTranscriptLine(text, isFinal) {
     minute: '2-digit',
     second: '2-digit'
   });
-  
+
   if (isFinal) {
+    // Skip duplicate: same text as the last line
+    const lastLine = transcriptLines[transcriptLines.length - 1];
+    if (lastLine && lastLine.text.trim() === text.trim()) {
+      return;
+    }
     const lineObj = { text, time };
     transcriptLines.push(lineObj);
     

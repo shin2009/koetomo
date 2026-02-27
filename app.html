@@ -1558,22 +1558,8 @@ function toggleListening() {
 }
 
 let listeningStartTime = null;
-let rawMicStream = null;
 
 async function startListening() {
-  // Request mic with audio processing disabled to pick up external audio (speakerphone, TV, etc.)
-  try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      }
-    });
-  } catch(e) {
-    console.log('Raw mic request failed, falling back to default:', e);
-  }
-
   // Start speech recognition
   recognition.lang = recognitionLang;
   try {
@@ -1587,18 +1573,10 @@ async function startListening() {
   }
 }
 
-function stopRawMic() {
-  if (rawMicStream) {
-    rawMicStream.getTracks().forEach(track => track.stop());
-    rawMicStream = null;
-  }
-}
-
 function stopListening() {
   const duration = listeningStartTime ? Math.round((Date.now() - listeningStartTime) / 1000) : 0;
   isListening = false;
   listeningStartTime = null;
-  stopRawMic();
   try {
     recognition.stop();
   } catch(e) {}

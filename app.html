@@ -1071,7 +1071,7 @@ body::before {
     <div class="instruction-steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-text" data-i18n="step1">電話を<strong>スピーカーフォン</strong>にする</div>
+        <div class="step-text" data-i18n="step1">相手の近くに<strong>スマホを置く</strong></div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
@@ -1083,40 +1083,13 @@ body::before {
       </div>
     </div>
 
-    <!-- Speaker Guide -->
+    <!-- Phone Call Tip -->
     <div class="speaker-guide" id="speakerGuide">
-      <div class="speaker-guide-title">
-        🔊 <span data-i18n="speakerGuideTitle">スピーカーフォンのやりかた</span>
-      </div>
-
-      <!-- Diagram -->
-      <div class="speaker-diagram">
-        <div style="text-align:center">
-          <div class="phone-icon-large">📱🤙</div>
-          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px" data-i18n="diagramBefore">通話が始まったら</div>
-        </div>
-        <div class="speaker-arrow">
-          <div class="arrow">→</div>
-        </div>
-        <div style="text-align:center">
-          <div class="phone-icon-large">📱🔊</div>
-          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px" data-i18n="diagramAfter">スピーカーに切替</div>
-        </div>
-      </div>
-
-      <!-- iPhone tap guide -->
-      <div class="speaker-tap-guide">
-        <div class="tap-icon">🔈</div>
-        <div class="tap-text" data-i18n="tapGuide">通話中の画面に表示される<br><strong>「スピーカー」ボタン</strong>をタップ<br>（四角から音波が出ているマーク）</div>
-      </div>
-
-      <!-- Auto speaker tip -->
       <div class="auto-speaker-tip">
         <span class="tip-label" data-i18n="tipLabel">💡 便利な設定</span>
-        <span data-i18n="autoSpeakerTip">
-          iPhoneは<strong>自動でスピーカーにする設定</strong>ができます。<br>
-          「設定」→「アクセシビリティ」→「タッチ」→「通話オーディオルーティング」→<strong>「スピーカー」</strong>を選択。<br>
-          これで毎回の切替が不要になります。
+        <span data-i18n="phoneCallTip">
+          電話の文字起こしもできます。<br>
+          <strong>通話用のスマホ</strong>と<strong>KoeOkosi用のスマホ</strong>の2台を用意し、通話をスピーカーフォンにしてお使いください。
         </span>
       </div>
     </div>
@@ -1162,7 +1135,7 @@ body::before {
     <span class="btn-icon">🎙️</span>
     <span data-i18n="startBtn">聞きとり開始</span>
   </button>
-  <div class="hint-text" data-i18n="hint">通話中にスピーカーフォンにしてお使いください</div>
+  <div class="hint-text" data-i18n="hint">対面での会話にお使いください</div>
 </div>
 
 <!-- History Detail Modal -->
@@ -1184,14 +1157,15 @@ const i18n = {
     statusError: 'エラーが発生しました',
     statusNoPermission: 'マイクの許可が必要です',
     howToUse: 'つかいかた',
-    step1: '電話を<strong>スピーカーフォン</strong>にする',
+    step1: '相手の近くに<strong>スマホを置く</strong>',
     step2: '下の<strong>「聞きとり開始」</strong>ボタンを押す',
     step3: '相手の声が<strong>文字で表示</strong>されます',
     transcriptTitle: '📝 会話の内容',
     waitingVoice: '音声を待っています...',
     startBtn: '聞きとり開始',
     stopBtn: '停止する',
-    hint: '通話中にスピーカーフォンにしてお使いください',
+    hint: '対面での会話にお使いください',
+    phoneCallTip: '電話の文字起こしもできます。<br><strong>通話用のスマホ</strong>と<strong>KoeOkosi用のスマホ</strong>の2台を用意し、通話をスピーカーフォンにしてお使いください。',
     historyTitle: '保存された会話',
     installPrompt: 'ホーム画面に追加すると、アプリのように使えます',
     installBtn: '追加する',
@@ -1205,12 +1179,7 @@ const i18n = {
     saved: '会話を保存しました',
     langLabel: '日本語',
     noiseGateLabel: '🔇 感度',
-    speakerGuideTitle: 'スピーカーフォンのやりかた',
-    diagramBefore: '通話が始まったら',
-    diagramAfter: 'スピーカーに切替',
-    tapGuide: '通話中の画面に表示される<br><strong>「スピーカー」ボタン</strong>をタップ<br>（四角から音波が出ているマーク）',
     tipLabel: '💡 便利な設定',
-    autoSpeakerTip: 'iPhoneは<strong>自動でスピーカーにする設定</strong>ができます。<br>「設定」→「アクセシビリティ」→「タッチ」→「通話オーディオルーティング」→<strong>「スピーカー」</strong>を選択。<br>これで毎回の切替が不要になります。',
     confirmClear: '会話内容をクリアしますか？',
     confirmDelete: 'この会話を削除しますか？',
     screenOn: '画面ON',
@@ -1224,14 +1193,15 @@ const i18n = {
     statusError: 'An error occurred',
     statusNoPermission: 'Microphone permission required',
     howToUse: 'How to Use',
-    step1: 'Put your phone on <strong>speaker</strong>',
+    step1: 'Place your phone <strong>near the speaker</strong>',
     step2: 'Press the <strong>"Start Listening"</strong> button below',
-    step3: 'The caller\'s voice will appear as <strong>text</strong>',
+    step3: 'Their voice will appear as <strong>text</strong>',
     transcriptTitle: '📝 Conversation',
     waitingVoice: 'Waiting for voice...',
     startBtn: 'Start Listening',
     stopBtn: 'Stop',
-    hint: 'Use with speakerphone during a call',
+    hint: 'Use for face-to-face conversations',
+    phoneCallTip: 'You can also transcribe phone calls.<br>Use <strong>two phones</strong>: one for the call on speaker, and one running KoeOkosi.',
     historyTitle: 'Saved Conversations',
     installPrompt: 'Add to home screen to use like an app',
     installBtn: 'Add',
@@ -1245,12 +1215,7 @@ const i18n = {
     saved: 'Conversation saved',
     langLabel: 'English',
     noiseGateLabel: '🔇 Sensitivity',
-    speakerGuideTitle: 'How to turn on speakerphone',
-    diagramBefore: 'When call starts',
-    diagramAfter: 'Switch to speaker',
-    tapGuide: 'Tap the <strong>"Speaker" button</strong><br>on the call screen<br>(square icon with sound waves)',
     tipLabel: '💡 Handy Setting',
-    autoSpeakerTip: 'iPhone can <strong>auto-enable speaker</strong> for calls.<br>Go to Settings → Accessibility → Touch → Call Audio Routing → select <strong>"Speaker"</strong>.<br>No more manual switching!',
     confirmClear: 'Clear the conversation?',
     confirmDelete: 'Delete this conversation?',
     screenOn: 'Screen ON',

@@ -1367,6 +1367,11 @@ let transcriptLines = [];
 let interimElement = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
+// Sentence buffer - merge short final results into one line
+let pendingText = '';
+let pendingTimer = null;
+const SENTENCE_MERGE_DELAY = 2000; // ms of silence before committing
+
 // ===== Noise Gate (Web Audio API) =====
 let audioContext = null;
 let analyser = null;
@@ -1550,12 +1555,12 @@ function initRecognition() {
   
   recognition.onresult = (event) => {
     let interimTranscript = '';
-    
+
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const result = event.results[i];
       const text = result[0].transcript;
       const confidence = result[0].confidence || 0.9;
-      
+
       if (result.isFinal) {
         // Pattern filter (catches music artifacts like "ラララ")
         if (isLikelyNoise(text, confidence)) {
@@ -1563,16 +1568,24 @@ function initRecognition() {
           removeInterim();
           continue;
         }
-        
-        addTranscriptLine(text, true);
+
+        // Buffer final results and merge them into one sentence
+        pendingText += text;
         removeInterim();
+        showInterim(pendingText); // Show buffered text as preview
+
+        // Reset the commit timer
+        if (pendingTimer) clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(() => {
+          commitPendingText();
+        }, SENTENCE_MERGE_DELAY);
       } else {
         interimTranscript += text;
       }
     }
-    
+
     if (interimTranscript) {
-      showInterim(interimTranscript);
+      showInterim(pendingText + interimTranscript);
     }
   };
   
@@ -1618,6 +1631,18 @@ function initRecognition() {
       updateUI();
     }
   };
+}
+
+function commitPendingText() {
+  if (pendingText) {
+    addTranscriptLine(pendingText, true);
+    pendingText = '';
+    removeInterim();
+  }
+  if (pendingTimer) {
+    clearTimeout(pendingTimer);
+    pendingTimer = null;
+  }
 }
 
 function toggleListening() {
@@ -1671,6 +1696,7 @@ function stopListening() {
   try {
     recognition.stop();
   } catch(e) {}
+  commitPendingText(); // Flush any buffered text before stopping
   removeInterim();
   releaseWakeLock();
   updateUI();

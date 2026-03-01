@@ -1367,10 +1367,6 @@ let transcriptLines = [];
 let interimElement = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-// Merge short lines if they arrive within this time window
-const LINE_MERGE_WINDOW = isIOS ? 5000 : 3000;
-let processedFinals = new Set(); // Prevent Chrome from reprocessing old final results
-
 // ===== Noise Gate (Web Audio API) =====
 let audioContext = null;
 let analyser = null;
@@ -1542,14 +1538,13 @@ function initRecognition() {
   }
   
   recognition = new SpeechRecognition();
-  recognition.continuous = true; // Keep listening — onend handles restart if it stops
+  recognition.continuous = !isIOS;
   recognition.interimResults = true;
   recognition.lang = recognitionLang;
   recognition.maxAlternatives = 1;
-  
+
   recognition.onstart = () => {
     isListening = true;
-    processedFinals.clear();
     updateUI();
   };
 
@@ -1562,11 +1557,6 @@ function initRecognition() {
       const confidence = result[0].confidence || 0.9;
 
       if (result.isFinal) {
-        // Skip already-processed result index (Chrome re-fires old finals)
-        if (processedFinals.has(i)) continue;
-        processedFinals.add(i);
-
-        // Pattern filter (catches music artifacts like "ラララ")
         if (isLikelyNoise(text, confidence)) {
           console.log('Noise filtered:', text, confidence);
           removeInterim();
@@ -1610,8 +1600,8 @@ function initRecognition() {
   recognition.onend = () => {
     if (isListening) {
       // Auto-restart to keep listening
-      // Small delay before restarting (iOS needs a brief pause)
-      const delay = isIOS ? 100 : 0;
+      // iOS needs a delay before restarting, otherwise it fails silently
+      const delay = isIOS ? 300 : 0;
       setTimeout(() => {
         if (!isListening) return;
         try {
@@ -1745,7 +1735,6 @@ function setStatus(key, type) {
 
 // ===== Transcript Management =====
 function addTranscriptLine(text, isFinal) {
-  const now = Date.now();
   const time = new Date().toLocaleTimeString(currentLang === 'ja' ? 'ja-JP' : 'en-US', {
     hour: '2-digit',
     minute: '2-digit',
@@ -1753,43 +1742,23 @@ function addTranscriptLine(text, isFinal) {
   });
 
   if (isFinal) {
+    // Skip duplicate: same text as the last line
     const lastLine = transcriptLines[transcriptLines.length - 1];
-
-    // Skip exact duplicate
     if (lastLine && lastLine.text.trim() === text.trim()) {
       return;
     }
+    const lineObj = { text, time };
+    transcriptLines.push(lineObj);
 
-    // Merge with previous line if within time window
-    if (lastLine && lastLine.timestamp && (now - lastLine.timestamp) < LINE_MERGE_WINDOW) {
-      lastLine.text += text;
-      lastLine.time = time;
-      lastLine.timestamp = now;
-
-      // Re-translate merged text
-      if (translateEnabled) {
-        translateText(lastLine.text).then(translated => {
-          if (translated) {
-            lastLine.translation = translated;
-            renderTranscript();
-            scrollToTop();
-          }
-        });
-      }
-    } else {
-      // New line
-      const lineObj = { text, time, timestamp: now };
-      transcriptLines.push(lineObj);
-
-      if (translateEnabled) {
-        translateText(text).then(translated => {
-          if (translated) {
-            lineObj.translation = translated;
-            renderTranscript();
-            scrollToTop();
-          }
-        });
-      }
+    // Auto-translate if enabled
+    if (translateEnabled) {
+      translateText(text).then(translated => {
+        if (translated) {
+          lineObj.translation = translated;
+          renderTranscript();
+          scrollToTop();
+        }
+      });
     }
   }
 

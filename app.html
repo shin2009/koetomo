@@ -764,6 +764,32 @@ body::before {
   line-height: 1.4;
 }
 
+/* iOS install banner */
+.ios-install-banner {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.ios-install-content {
+  flex: 1;
+}
+
+.ios-install-steps {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+.ios-share-icon {
+  display: inline-block;
+  border: 1.5px solid white;
+  border-radius: 4px;
+  padding: 0 3px;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
 .install-btn {
   background: white;
   color: var(--green-deep);
@@ -1026,11 +1052,22 @@ body::before {
   <button class="flip-btn" id="flipBtn" onclick="toggleFlip()" style="margin-left:4px;" title="画面反転">🔄</button>
 </header>
 
-<!-- PWA Install Banner -->
+<!-- PWA Install Banner (Android/Chrome) -->
 <div class="install-banner" id="installBanner">
   <p data-i18n="installPrompt">ホーム画面に追加すると、アプリのように使えます</p>
   <button class="install-btn" onclick="installPWA()" data-i18n="installBtn">追加する</button>
   <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+</div>
+
+<!-- PWA Install Banner (iOS Safari) -->
+<div class="install-banner ios-install-banner" id="iosInstallBanner">
+  <div class="ios-install-content">
+    <p data-i18n="iosInstallPrompt">ホーム画面に追加すると、アプリのように使えます</p>
+    <p class="ios-install-steps" data-i18n="iosInstallSteps">
+      下の <span class="ios-share-icon">⬆</span> 共有ボタン → 「ホーム画面に追加」をタップ
+    </p>
+  </div>
+  <button class="install-dismiss" onclick="dismissIOSInstall()">✕</button>
 </div>
 
 <!-- Status Bar -->
@@ -1169,6 +1206,8 @@ const i18n = {
     historyTitle: '保存された会話',
     installPrompt: 'ホーム画面に追加すると、アプリのように使えます',
     installBtn: '追加する',
+    iosInstallPrompt: 'ホーム画面に追加すると、アプリのように使えます',
+    iosInstallSteps: '下の <span class="ios-share-icon">⬆</span> 共有ボタン →「ホーム画面に追加」をタップ',
     unsupported: 'お使いのブラウザは音声認識に対応していません。Chrome または Safari をお使いください。',
     fontSmall: '小',
     fontMedium: '中',
@@ -1205,6 +1244,8 @@ const i18n = {
     historyTitle: 'Saved Conversations',
     installPrompt: 'Add to home screen to use like an app',
     installBtn: 'Add',
+    iosInstallPrompt: 'Add to home screen to use like an app',
+    iosInstallSteps: 'Tap <span class="ios-share-icon">⬆</span> Share button below → "Add to Home Screen"',
     unsupported: 'Your browser does not support speech recognition. Please use Chrome or Safari.',
     fontSmall: 'S',
     fontMedium: 'M',
@@ -1996,6 +2037,11 @@ function dismissInstall() {
   document.getElementById('installBanner').classList.remove('visible');
 }
 
+function dismissIOSInstall() {
+  document.getElementById('iosInstallBanner').classList.remove('visible');
+  localStorage.setItem('iosInstallDismissed', '1');
+}
+
 // ===== Wake Lock (Screen Always ON) =====
 let wakeLock = null;
 
@@ -2054,15 +2100,12 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHistory();
   updateFontLabel();
   
-  // iOS Safari detection for install hint
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-  if (isIOS && !isStandalone) {
-    // Show iOS install hint
-    const hint = document.querySelector('.hint-text');
-    if (hint) {
-      hint.innerHTML += '<br>📱 Safari の「共有」→「ホーム画面に追加」でアプリ化できます';
-    }
+  // iOS Safari detection for install banner
+  const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const iosInstallDismissed = localStorage.getItem('iosInstallDismissed');
+  if (isIOSDevice && !isStandalone && !iosInstallDismissed) {
+    document.getElementById('iosInstallBanner').classList.add('visible');
   }
 });
 

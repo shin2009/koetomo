@@ -1370,6 +1370,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 // Sentence buffer - merge short final results into one line
 let pendingText = '';
 let pendingTimer = null;
+let lastFinalSegment = ''; // Track last segment to prevent duplicates
 // iOS needs longer delay because continuous=false causes stop/restart between each segment
 const SENTENCE_MERGE_DELAY = isIOS ? 5000 : 2000;
 
@@ -1570,6 +1571,13 @@ function initRecognition() {
           continue;
         }
 
+        // Skip duplicate final results (Chrome sometimes fires same text twice)
+        if (text.trim() === lastFinalSegment.trim()) {
+          removeInterim();
+          continue;
+        }
+        lastFinalSegment = text;
+
         // Buffer final results and merge them into one sentence
         pendingText += text;
         removeInterim();
@@ -1652,6 +1660,7 @@ function commitPendingText() {
   if (pendingText) {
     addTranscriptLine(pendingText, true);
     pendingText = '';
+    lastFinalSegment = '';
     removeInterim();
   }
   if (pendingTimer) {

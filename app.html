@@ -1367,12 +1367,8 @@ let transcriptLines = [];
 let interimElement = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-// Sentence buffer - merge short final results into one line
-let pendingText = '';
-let pendingTimer = null;
-let processedFinals = new Set(); // Track processed result indices to prevent duplicates
-// iOS needs longer delay because continuous=false causes stop/restart between each segment
-const SENTENCE_MERGE_DELAY = isIOS ? 5000 : 2000;
+// Merge short lines if they arrive within this time window
+const LINE_MERGE_WINDOW = isIOS ? 5000 : 3000;
 
 // ===== Noise Gate (Web Audio API) =====
 let audioContext = null;
@@ -1552,10 +1548,9 @@ function initRecognition() {
   
   recognition.onstart = () => {
     isListening = true;
-    processedFinals.clear(); // Reset for new recognition session
     updateUI();
   };
-  
+
   recognition.onresult = (event) => {
     let interimTranscript = '';
 
@@ -1565,10 +1560,6 @@ function initRecognition() {
       const confidence = result[0].confidence || 0.9;
 
       if (result.isFinal) {
-        // Skip already-processed result indices (Chrome re-fires old finals)
-        if (processedFinals.has(i)) continue;
-        processedFinals.add(i);
-
         // Pattern filter (catches music artifacts like "ラララ")
         if (isLikelyNoise(text, confidence)) {
           console.log('Noise filtered:', text, confidence);
@@ -1576,23 +1567,15 @@ function initRecognition() {
           continue;
         }
 
-        // Buffer final results and merge them into one sentence
-        pendingText += text;
+        addTranscriptLine(text, true);
         removeInterim();
-        showInterim(pendingText); // Show buffered text as preview
-
-        // Reset the commit timer
-        if (pendingTimer) clearTimeout(pendingTimer);
-        pendingTimer = setTimeout(() => {
-          commitPendingText();
-        }, SENTENCE_MERGE_DELAY);
       } else {
         interimTranscript += text;
       }
     }
 
     if (interimTranscript) {
-      showInterim(pendingText + interimTranscript);
+      showInterim(interimTranscript);
     }
   };
   
@@ -1623,25 +1606,11 @@ function initRecognition() {
       // Auto-restart to keep listening
       // iOS needs a delay before restarting, otherwise it fails silently
       const delay = isIOS ? 300 : 0;
-
-      // Pause the merge timer during restart so buffered text isn't committed prematurely
-      if (isIOS && pendingTimer) {
-        clearTimeout(pendingTimer);
-        pendingTimer = null;
-      }
-
       setTimeout(() => {
         if (!isListening) return;
         try {
           recognition.lang = recognitionLang;
           recognition.start();
-
-          // Restart the merge timer after recognition resumes
-          if (isIOS && pendingText) {
-            pendingTimer = setTimeout(() => {
-              commitPendingText();
-            }, SENTENCE_MERGE_DELAY);
-          }
         } catch(e) {
           console.error('Recognition restart failed:', e);
           isListening = false;
@@ -1652,18 +1621,6 @@ function initRecognition() {
       updateUI();
     }
   };
-}
-
-function commitPendingText() {
-  if (pendingText) {
-    addTranscriptLine(pendingText, true);
-    pendingText = '';
-    removeInterim();
-  }
-  if (pendingTimer) {
-    clearTimeout(pendingTimer);
-    pendingTimer = null;
-  }
 }
 
 function toggleListening() {
@@ -1717,7 +1674,6 @@ function stopListening() {
   try {
     recognition.stop();
   } catch(e) {}
-  commitPendingText(); // Flush any buffered text before stopping
   removeInterim();
   releaseWakeLock();
   updateUI();
@@ -1783,6 +1739,7 @@ function setStatus(key, type) {
 
 // ===== Transcript Management =====
 function addTranscriptLine(text, isFinal) {
+  const now = Date.now();
   const time = new Date().toLocaleTimeString(currentLang === 'ja' ? 'ja-JP' : 'en-US', {
     hour: '2-digit',
     minute: '2-digit',
@@ -1790,26 +1747,51 @@ function addTranscriptLine(text, isFinal) {
   });
 
   if (isFinal) {
-    // Skip duplicate: same text as the last line
     const lastLine = transcriptLines[transcriptLines.length - 1];
+
+    // Skip duplicate: same text as the last line
     if (lastLine && lastLine.text.trim() === text.trim()) {
       return;
     }
-    const lineObj = { text, time };
-    transcriptLines.push(lineObj);
-    
-    // Auto-translate if enabled
-    if (translateEnabled) {
-      translateText(text).then(translated => {
-        if (translated) {
-          lineObj.translation = translated;
-          renderTranscript();
-          scrollToTop();
-        }
-      });
+
+    // Skip if last line already ends with this text (partial duplicate from API re-fire)
+    if (lastLine && lastLine.text.trim().endsWith(text.trim())) {
+      return;
+    }
+
+    // Merge with previous line if within time window
+    if (lastLine && lastLine.timestamp && (now - lastLine.timestamp) < LINE_MERGE_WINDOW) {
+      lastLine.text += text;
+      lastLine.time = time;
+      lastLine.timestamp = now;
+
+      // Re-translate merged text
+      if (translateEnabled) {
+        translateText(lastLine.text).then(translated => {
+          if (translated) {
+            lastLine.translation = translated;
+            renderTranscript();
+            scrollToTop();
+          }
+        });
+      }
+    } else {
+      // New line
+      const lineObj = { text, time, timestamp: now };
+      transcriptLines.push(lineObj);
+
+      if (translateEnabled) {
+        translateText(text).then(translated => {
+          if (translated) {
+            lineObj.translation = translated;
+            renderTranscript();
+            scrollToTop();
+          }
+        });
+      }
     }
   }
-  
+
   renderTranscript();
   scrollToTop();
 }

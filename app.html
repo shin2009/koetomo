@@ -1314,9 +1314,7 @@ function toggleLanguage() {
     recognition.lang = recognitionLang;
     try {
       recognition.stop();
-      setTimeout(() => {
-        if (isListening) recognition.start();
-      }, 300);
+      // onend handler will auto-restart with the new language
     } catch(e) {}
   }
 }
@@ -1326,6 +1324,7 @@ let recognition = null;
 let isListening = false;
 let transcriptLines = [];
 let interimElement = null;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 // ===== Noise Gate (Web Audio API) =====
 let audioContext = null;
@@ -1498,7 +1497,7 @@ function initRecognition() {
   }
   
   recognition = new SpeechRecognition();
-  recognition.continuous = true;
+  recognition.continuous = !isIOS; // iOS Safari does not support continuous mode reliably
   recognition.interimResults = true;
   recognition.lang = recognitionLang;
   recognition.maxAlternatives = 1;
@@ -1538,16 +1537,22 @@ function initRecognition() {
   
   recognition.onerror = (event) => {
     console.log('Speech recognition error:', event.error);
-    
+
     if (event.error === 'not-allowed') {
       setStatus('statusNoPermission', 'error');
+      isListening = false;
+      updateUI();
     } else if (event.error === 'no-speech') {
-      // Auto-restart on no speech
-      if (isListening) {
-        try { recognition.start(); } catch(e) {}
-      }
+      // No speech detected — onend will handle restart
       return;
-    } else if (event.error !== 'aborted') {
+    } else if (event.error === 'aborted') {
+      // Aborted — onend will handle restart if still listening
+      return;
+    } else if (event.error === 'network') {
+      // Network error — common on iOS, onend will handle restart
+      console.warn('Network error in speech recognition, will retry via onend');
+      return;
+    } else {
       setStatus('statusError', 'error');
     }
   };
@@ -1555,13 +1560,19 @@ function initRecognition() {
   recognition.onend = () => {
     if (isListening) {
       // Auto-restart to keep listening
-      try {
-        recognition.lang = recognitionLang;
-        recognition.start();
-      } catch(e) {
-        isListening = false;
-        updateUI();
-      }
+      // iOS needs a delay before restarting, otherwise it fails silently
+      const delay = isIOS ? 300 : 0;
+      setTimeout(() => {
+        if (!isListening) return;
+        try {
+          recognition.lang = recognitionLang;
+          recognition.start();
+        } catch(e) {
+          console.error('Recognition restart failed:', e);
+          isListening = false;
+          updateUI();
+        }
+      }, delay);
     } else {
       updateUI();
     }
@@ -1584,6 +1595,20 @@ function toggleListening() {
 let listeningStartTime = null;
 
 async function startListening() {
+  // On iOS, request microphone permission explicitly before starting recognition.
+  // Without this, recognition.start() can fail silently on iOS Safari.
+  if (isIOS) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Stop the stream immediately — we only needed it to trigger the permission prompt
+      stream.getTracks().forEach(track => track.stop());
+    } catch(e) {
+      console.error('Microphone permission denied:', e);
+      setStatus('statusNoPermission', 'error');
+      return;
+    }
+  }
+
   // Start speech recognition
   recognition.lang = recognitionLang;
   try {

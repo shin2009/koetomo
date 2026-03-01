@@ -1369,6 +1369,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 // Merge short lines if they arrive within this time window
 const LINE_MERGE_WINDOW = isIOS ? 5000 : 3000;
+let processedFinals = new Set(); // Prevent Chrome from reprocessing old final results
 
 // ===== Noise Gate (Web Audio API) =====
 let audioContext = null;
@@ -1541,13 +1542,14 @@ function initRecognition() {
   }
   
   recognition = new SpeechRecognition();
-  recognition.continuous = !isIOS; // iOS Safari does not support continuous mode reliably
+  recognition.continuous = true; // Keep listening — onend handles restart if it stops
   recognition.interimResults = true;
   recognition.lang = recognitionLang;
   recognition.maxAlternatives = 1;
   
   recognition.onstart = () => {
     isListening = true;
+    processedFinals.clear();
     updateUI();
   };
 
@@ -1560,6 +1562,10 @@ function initRecognition() {
       const confidence = result[0].confidence || 0.9;
 
       if (result.isFinal) {
+        // Skip already-processed result index (Chrome re-fires old finals)
+        if (processedFinals.has(i)) continue;
+        processedFinals.add(i);
+
         // Pattern filter (catches music artifacts like "ラララ")
         if (isLikelyNoise(text, confidence)) {
           console.log('Noise filtered:', text, confidence);
@@ -1604,8 +1610,8 @@ function initRecognition() {
   recognition.onend = () => {
     if (isListening) {
       // Auto-restart to keep listening
-      // iOS needs a delay before restarting, otherwise it fails silently
-      const delay = isIOS ? 300 : 0;
+      // Small delay before restarting (iOS needs a brief pause)
+      const delay = isIOS ? 100 : 0;
       setTimeout(() => {
         if (!isListening) return;
         try {
@@ -1749,13 +1755,8 @@ function addTranscriptLine(text, isFinal) {
   if (isFinal) {
     const lastLine = transcriptLines[transcriptLines.length - 1];
 
-    // Skip duplicate: same text as the last line
+    // Skip exact duplicate
     if (lastLine && lastLine.text.trim() === text.trim()) {
-      return;
-    }
-
-    // Skip if last line already ends with this text (partial duplicate from API re-fire)
-    if (lastLine && lastLine.text.trim().endsWith(text.trim())) {
       return;
     }
 

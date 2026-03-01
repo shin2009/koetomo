@@ -1747,7 +1747,7 @@ function addTranscriptLine(text, isFinal) {
     if (lastLine && lastLine.text.trim() === text.trim()) {
       return;
     }
-    const lineObj = { text, time };
+    const lineObj = { text, time, ts: Date.now() };
     transcriptLines.push(lineObj);
 
     // Auto-translate if enabled
@@ -1792,30 +1792,52 @@ function removeInterim() {
 function renderTranscript() {
   const body = document.getElementById('transcriptBody');
   const empty = document.getElementById('transcriptEmpty');
-  
+
   if (transcriptLines.length === 0) {
     if (empty) empty.style.display = '';
     return;
   }
-  
+
   if (empty) empty.style.display = 'none';
-  
+
   // Remove all final lines
   body.querySelectorAll('.transcript-line.final').forEach(el => el.remove());
-  
-  // Re-render in reverse order (newest first)
+
+  // Group consecutive lines that are within 5 seconds of each other
+  const GROUP_GAP = 5000;
+  const groups = [];
+  let currentGroup = [transcriptLines[0]];
+
+  for (let i = 1; i < transcriptLines.length; i++) {
+    const prev = transcriptLines[i - 1];
+    const curr = transcriptLines[i];
+    if (prev.ts && curr.ts && (curr.ts - prev.ts) < GROUP_GAP) {
+      currentGroup.push(curr);
+    } else {
+      groups.push(currentGroup);
+      currentGroup = [curr];
+    }
+  }
+  groups.push(currentGroup);
+
+  // Render groups in reverse order (newest first)
   const fragment = document.createDocumentFragment();
-  for (let i = transcriptLines.length - 1; i >= 0; i--) {
-    const line = transcriptLines[i];
+  for (let g = groups.length - 1; g >= 0; g--) {
+    const group = groups[g];
     const div = document.createElement('div');
     div.className = 'transcript-line final';
     div.style.fontSize = fontSizes[currentFontSize] + 'rem';
 
-    let html = `${line.text}`;
-    if (translateEnabled && line.translation) {
-      html += `<span class="translated">${line.translation}</span>`;
+    let html = '';
+    for (let i = 0; i < group.length; i++) {
+      const line = group[i];
+      html += line.text;
+      if (translateEnabled && line.translation) {
+        html += `<span class="translated">${line.translation}</span>`;
+      }
     }
-    html += `<span class="timestamp">${line.time}</span>`;
+    // Use the last line's timestamp for the group
+    html += `<span class="timestamp">${group[group.length - 1].time}</span>`;
     div.innerHTML = html;
 
     fragment.appendChild(div);

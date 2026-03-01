@@ -1370,7 +1370,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 // Sentence buffer - merge short final results into one line
 let pendingText = '';
 let pendingTimer = null;
-let lastFinalSegment = ''; // Track last segment to prevent duplicates
+let processedFinals = new Set(); // Track processed result indices to prevent duplicates
 // iOS needs longer delay because continuous=false causes stop/restart between each segment
 const SENTENCE_MERGE_DELAY = isIOS ? 5000 : 2000;
 
@@ -1552,6 +1552,7 @@ function initRecognition() {
   
   recognition.onstart = () => {
     isListening = true;
+    processedFinals.clear(); // Reset for new recognition session
     updateUI();
   };
   
@@ -1564,19 +1565,16 @@ function initRecognition() {
       const confidence = result[0].confidence || 0.9;
 
       if (result.isFinal) {
+        // Skip already-processed result indices (Chrome re-fires old finals)
+        if (processedFinals.has(i)) continue;
+        processedFinals.add(i);
+
         // Pattern filter (catches music artifacts like "ラララ")
         if (isLikelyNoise(text, confidence)) {
           console.log('Noise filtered:', text, confidence);
           removeInterim();
           continue;
         }
-
-        // Skip duplicate final results (Chrome sometimes fires same text twice)
-        if (text.trim() === lastFinalSegment.trim()) {
-          removeInterim();
-          continue;
-        }
-        lastFinalSegment = text;
 
         // Buffer final results and merge them into one sentence
         pendingText += text;
@@ -1660,7 +1658,6 @@ function commitPendingText() {
   if (pendingText) {
     addTranscriptLine(pendingText, true);
     pendingText = '';
-    lastFinalSegment = '';
     removeInterim();
   }
   if (pendingTimer) {

@@ -1370,7 +1370,8 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 // Sentence buffer - merge short final results into one line
 let pendingText = '';
 let pendingTimer = null;
-const SENTENCE_MERGE_DELAY = 2000; // ms of silence before committing
+// iOS needs longer delay because continuous=false causes stop/restart between each segment
+const SENTENCE_MERGE_DELAY = isIOS ? 5000 : 2000;
 
 // ===== Noise Gate (Web Audio API) =====
 let audioContext = null;
@@ -1616,11 +1617,25 @@ function initRecognition() {
       // Auto-restart to keep listening
       // iOS needs a delay before restarting, otherwise it fails silently
       const delay = isIOS ? 300 : 0;
+
+      // Pause the merge timer during restart so buffered text isn't committed prematurely
+      if (isIOS && pendingTimer) {
+        clearTimeout(pendingTimer);
+        pendingTimer = null;
+      }
+
       setTimeout(() => {
         if (!isListening) return;
         try {
           recognition.lang = recognitionLang;
           recognition.start();
+
+          // Restart the merge timer after recognition resumes
+          if (isIOS && pendingText) {
+            pendingTimer = setTimeout(() => {
+              commitPendingText();
+            }, SENTENCE_MERGE_DELAY);
+          }
         } catch(e) {
           console.error('Recognition restart failed:', e);
           isListening = false;

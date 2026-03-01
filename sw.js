@@ -1,4 +1,4 @@
-const CACHE_NAME = 'koetomo-v12';
+const CACHE_NAME = 'koetomo-v13';
 const ASSETS = [
   '/',
   '/index.html',

@@ -93,11 +93,18 @@ body::before {
   padding: 16px 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 4px 20px rgba(26, 86, 50, 0.25);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
 }
 
 .logo {
@@ -1120,9 +1127,11 @@ body::before {
       <div class="logo-sub" data-i18n="subtitle">声を文字に、想いをつなぐ</div>
     </div>
   </div>
-  <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">EN</button>
-  <button class="lang-toggle" id="translateToggle" onclick="toggleTranslate()" style="margin-left:6px; opacity:0.6">訳</button>
-  <button class="flip-btn" id="flipBtn" onclick="toggleFlip()" style="margin-left:4px;" title="画面反転">🔄</button>
+  <div class="header-controls">
+    <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">EN</button>
+    <button class="lang-toggle" id="translateToggle" onclick="toggleTranslate()" style="opacity:0.6">訳</button>
+    <button class="flip-btn" id="flipBtn" onclick="toggleFlip()" title="画面反転">🔄</button>
+  </div>
   <a href="https://forms.gle/2xEQdiWJzHXoSBCc8" target="_blank" class="feedback-header-link" title="フィードバック">ご意見</a>
 </header>
 

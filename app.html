@@ -1214,7 +1214,7 @@ body::before {
   <span class="status-text" id="statusText" data-i18n="statusReady">マイクの準備ができています</span>
   <span class="wakelock-indicator" id="wakelockIndicator">🔒 <span data-i18n="screenOn">画面ON</span></span>
   <div class="status-lang-wrapper">
-    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">日本語</button>
+    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">言語モード　日本語</button>
     <div class="lang-dropdown" id="langDropdown">
       <button class="lang-dropdown-btn active" data-lang="ja-JP" onclick="setRecognitionLang('ja-JP', this)">JA</button>
       <button class="lang-dropdown-btn" data-lang="en-US" onclick="setRecognitionLang('en-US', this)">EN</button>
@@ -1526,7 +1526,7 @@ function setRecognitionLang(langCode, btn) {
   if (btn) btn.classList.add('active');
 
   // Update status bar language label
-  document.getElementById('statusLang').textContent = lang ? lang.name : langCode;
+  document.getElementById('statusLang').textContent = '言語モード\u3000' + (lang ? lang.name : langCode);
 
   // Close dropdown
   document.getElementById('langDropdown').classList.remove('open');

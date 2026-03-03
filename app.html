@@ -1182,10 +1182,10 @@ body::before {
     <p>⚠️ <span data-i18n="unsupported">お使いのブラウザは音声認識に対応していません。Chrome または Safari をお使いください。</span></p>
   </div>
 
-  <!-- Instruction Card -->
+  <!-- Instruction Card: Hearing -->
   <div class="instruction-card" id="instructionCard">
     <div class="instruction-title">
-      📋 <span data-i18n="howToUse">つかいかた</span>
+      👂 <span data-i18n="howToUseHearing">聞こえにくい方との会話</span>
     </div>
     <div class="instruction-steps">
       <div class="step">
@@ -1205,8 +1205,35 @@ body::before {
         <div class="step-text" data-i18n="stepFlip">右上の<strong>🔄ボタン</strong>で画面を反転。相手に文字を見せられます</div>
       </div>
     </div>
+  </div>
 
-    <!-- Phone Call Tip -->
+  <!-- Instruction Card: Foreign Language -->
+  <div class="instruction-card">
+    <div class="instruction-title">
+      🌏 <span data-i18n="howToUseForeign">外国の方との会話</span>
+    </div>
+    <div class="instruction-steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text" data-i18n="foreignStep1">右上の<strong>「EN」</strong>で相手の言語に切り替える</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text" data-i18n="foreignStep2"><strong>「訳」</strong>ボタンをONにする</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text" data-i18n="foreignStep3">相手の言葉が<strong>翻訳付き</strong>で表示されます</div>
+      </div>
+      <div class="step">
+        <div class="step-num">💡</div>
+        <div class="step-text" data-i18n="foreignStepTip">自分が話すときは<strong>「EN」→「JA」</strong>に戻してください</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone Call Tip -->
+  <div class="instruction-card">
     <div class="speaker-guide" id="speakerGuide">
       <div class="auto-speaker-tip">
         <span class="tip-label" data-i18n="tipLabel">💡 便利な設定</span>
@@ -1288,10 +1315,16 @@ const i18n = {
     statusError: 'エラーが発生しました',
     statusNoPermission: 'マイクの許可が必要です',
     howToUse: 'つかいかた',
+    howToUseHearing: '聞こえにくい方との会話',
+    howToUseForeign: '外国の方との会話',
     step1: '相手の近くに<strong>スマホを置く</strong>',
     step2: '下の<strong>「聞きとり開始」</strong>ボタンを押す',
     step3: '相手の声が<strong>文字で表示</strong>されます',
     stepFlip: '右上の<strong>🔄ボタン</strong>で画面を反転。相手に文字を見せられます',
+    foreignStep1: '右上の<strong>「EN」</strong>で相手の言語に切り替える',
+    foreignStep2: '<strong>「訳」</strong>ボタンをONにする',
+    foreignStep3: '相手の言葉が<strong>翻訳付き</strong>で表示されます',
+    foreignStepTip: '自分が話すときは<strong>「EN」→「JA」</strong>に戻してください',
     transcriptTitle: '📝 会話の内容',
     waitingVoice: '音声を待っています...',
     startBtn: '聞きとり開始',
@@ -1331,10 +1364,16 @@ const i18n = {
     statusError: 'An error occurred',
     statusNoPermission: 'Microphone permission required',
     howToUse: 'How to Use',
+    howToUseHearing: 'Conversations with hearing-impaired',
+    howToUseForeign: 'Conversations with foreign speakers',
     step1: 'Place your phone <strong>near the speaker</strong>',
     step2: 'Press the <strong>"Start Listening"</strong> button below',
     step3: 'Their voice will appear as <strong>text</strong>',
     stepFlip: 'Tap <strong>🔄</strong> at the top right to flip the screen and show text to the other person',
+    foreignStep1: 'Tap <strong>"EN"</strong> to switch to the other person\'s language',
+    foreignStep2: 'Turn on the <strong>"TR"</strong> (translate) button',
+    foreignStep3: 'Their words appear with <strong>translation</strong>',
+    foreignStepTip: 'Switch back to <strong>"JA"</strong> when you speak',
     transcriptTitle: '📝 Conversation',
     waitingVoice: 'Waiting for voice...',
     startBtn: 'Start Listening',

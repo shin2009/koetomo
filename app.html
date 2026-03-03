@@ -1227,7 +1227,7 @@ body::before {
   </div>
 
   <!-- Language Selector -->
-  <div class="lang-selector">
+  <div class="lang-selector" id="langSelector">
     <div class="lang-selector-title">🎙️ 認識する言語</div>
     <div class="lang-selector-btns">
       <button class="lang-selector-btn active" onclick="setRecognitionLang('ja-JP', this)">JA</button>
@@ -1261,7 +1261,7 @@ body::before {
   </div>
 
   <!-- Instruction Card: Foreign Language -->
-  <div class="instruction-card">
+  <div class="instruction-card" id="instructionCardForeign">
     <div class="instruction-title">
       🌏 <span data-i18n="howToUseForeign">外国の方との会話</span>
     </div>
@@ -1863,14 +1863,18 @@ function updateUI() {
   const dot = document.getElementById('statusDot');
   const container = document.getElementById('transcriptContainer');
   const instruction = document.getElementById('instructionCard');
+  const instructionForeign = document.getElementById('instructionCardForeign');
+  const langSelector = document.getElementById('langSelector');
   const fontControl = document.getElementById('fontControl');
-  
+
   if (isListening) {
     btn.className = 'start-btn listening';
     dot.className = 'status-dot active';
     setStatus('statusListening');
     container.classList.add('visible');
     instruction.style.display = 'none';
+    instructionForeign.style.display = 'none';
+    langSelector.style.display = 'none';
     fontControl.classList.add('visible');
   } else {
     btn.className = 'start-btn ready';
@@ -1881,6 +1885,9 @@ function updateUI() {
       fontControl.classList.add('visible');
     } else {
       setStatus('statusReady');
+      instruction.style.display = '';
+      instructionForeign.style.display = '';
+      langSelector.style.display = '';
     }
   }
   

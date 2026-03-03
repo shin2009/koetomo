@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a5632">
-<meta name="description" content="KoeOkosi（声おこし）は通話中の音声をリアルタイムで文字に変換する無料アプリです。難聴の方の会話サポート、英語学習、ビジネス通訳に。">
-<meta property="og:title" content="KoeOkosi - 声おこし｜通話の声をリアルタイムで文字に">
-<meta property="og:description" content="通話中の音声をリアルタイムで文字に変換。難聴の方の会話サポート、英語学習、ビジネス通訳に。">
+<meta name="description" content="KoeOkosi（声おこし）は音声をリアルタイムで文字に変換する無料アプリです。聞こえにくい方との会話サポート、外国の方との会話に。">
+<meta property="og:title" content="KoeOkosi - 声おこし｜声をリアルタイムで文字に">
+<meta property="og:description" content="音声をリアルタイムで文字に変換。聞こえにくい方との会話サポート、外国の方との会話に。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://koeokosi.vercel.app">
 <link rel="icon" href="icon-192.png">
-<title>KoeOkosi - 声おこし｜通話の声をリアルタイムで文字に</title>
+<title>KoeOkosi - 声おこし｜声をリアルタイムで文字に</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
 
@@ -350,6 +350,22 @@ body {
   margin-bottom: 20px;
 }
 
+/* ===== STORY ===== */
+.story-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(45, 138, 86, 0.08);
+  line-height: 2;
+  font-size: 0.95rem;
+  color: var(--text-mid);
+}
+
+.story-card p + p {
+  margin-top: 8px;
+}
+
 /* ===== FOOTER ===== */
 .footer {
   background: var(--green-deep);
@@ -392,7 +408,7 @@ body {
     <div class="hero-logo-text">KoeOkosi</div>
   </div>
   <h1>声を、リアルタイムで<br>文字に変える。</h1>
-  <p>会話や電話の声を、その場で文字に変換。<br>聞こえにくくても、言葉が目で見える安心を。</p>
+  <p>会話の声を、その場で文字に変換。<br>聞こえにくくても、言葉が目で見える安心を。</p>
   <a href="app.html" class="cta-btn">アプリを使ってみる</a>
   <span class="cta-sub">無料・登録不要・インストール不要</span>
 </section>
@@ -492,6 +508,16 @@ body {
 <section class="cta-bottom">
   <p>さっそく試してみませんか？</p>
   <a href="app.html" class="cta-btn" style="background: linear-gradient(135deg, var(--green-main), var(--green-light)); color: white;">アプリを使ってみる</a>
+</section>
+
+<!-- Story -->
+<section class="section">
+  <h2 class="section-title">開発のきっかけ</h2>
+  <div class="story-card">
+    <p>義父は耳が聞こえづらく、家族との会話にいつも苦労していました。</p>
+    <p>「自分の言葉が文字になれば、もっと気軽に話せるのに」</p>
+    <p>そんな想いから、このアプリを作りました。</p>
+  </div>
 </section>
 
 <!-- Footer -->

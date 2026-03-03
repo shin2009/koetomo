@@ -196,6 +196,10 @@ body::before {
   flex: 1;
 }
 
+.status-lang-wrapper {
+  position: relative;
+}
+
 .status-lang {
   background: var(--green-pale);
   color: var(--green-deep);
@@ -203,6 +207,57 @@ body::before {
   border-radius: 50px;
   font-weight: 700;
   font-size: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  font-family: inherit;
+}
+
+.status-lang::after {
+  content: ' ▾';
+  font-size: 0.7em;
+}
+
+.lang-dropdown {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  padding: 8px;
+  z-index: 100;
+  min-width: 200px;
+}
+
+.lang-dropdown.open {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lang-dropdown-btn {
+  background: var(--green-pale);
+  color: var(--green-deep);
+  border: 2px solid transparent;
+  padding: 8px 14px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.lang-dropdown-btn.active {
+  background: var(--green-main);
+  color: white;
+}
+
+.lang-dropdown-btn:hover:not(.active) {
+  border-color: var(--green-main);
 }
 
 /* ===== MAIN CONTENT ===== */
@@ -750,49 +805,6 @@ body::before {
 }
 
 /* ===== LANGUAGE SELECTOR ===== */
-.lang-selector {
-  background: white;
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-soft);
-  border: 1px solid rgba(45, 138, 86, 0.08);
-}
-
-.lang-selector-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--green-deep);
-  margin-bottom: 12px;
-}
-
-.lang-selector-btns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.lang-selector-btn {
-  background: var(--green-pale);
-  color: var(--green-deep);
-  border: 2px solid transparent;
-  padding: 8px 18px;
-  border-radius: 50px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.lang-selector-btn.active {
-  background: var(--green-main);
-  color: white;
-}
-
-.lang-selector-btn:hover:not(.active) {
-  border-color: var(--green-main);
-}
 
 /* ===== FEEDBACK LINK (HEADER) ===== */
 .feedback-header-link {
@@ -1201,7 +1213,17 @@ body::before {
   <div class="status-dot" id="statusDot"></div>
   <span class="status-text" id="statusText" data-i18n="statusReady">マイクの準備ができています</span>
   <span class="wakelock-indicator" id="wakelockIndicator">🔒 <span data-i18n="screenOn">画面ON</span></span>
-  <span class="status-lang" id="statusLang">日本語</span>
+  <div class="status-lang-wrapper">
+    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">日本語</button>
+    <div class="lang-dropdown" id="langDropdown">
+      <button class="lang-dropdown-btn active" data-lang="ja-JP" onclick="setRecognitionLang('ja-JP', this)">JA</button>
+      <button class="lang-dropdown-btn" data-lang="en-US" onclick="setRecognitionLang('en-US', this)">EN</button>
+      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setRecognitionLang('zh-CN', this)">中文</button>
+      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setRecognitionLang('ko-KR', this)">한국</button>
+      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setRecognitionLang('de-DE', this)">DE</button>
+      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setRecognitionLang('fr-FR', this)">FR</button>
+    </div>
+  </div>
 </div>
 
 <!-- Noise Gate Bar -->
@@ -1224,19 +1246,6 @@ body::before {
   <!-- Unsupported Notice -->
   <div class="unsupported-notice" id="unsupportedNotice">
     <p>⚠️ <span data-i18n="unsupported">お使いのブラウザは音声認識に対応していません。Chrome または Safari をお使いください。</span></p>
-  </div>
-
-  <!-- Language Selector -->
-  <div class="lang-selector" id="langSelector">
-    <div class="lang-selector-title">🎙️ 認識する言語</div>
-    <div class="lang-selector-btns">
-      <button class="lang-selector-btn active" onclick="setRecognitionLang('ja-JP', this)">JA</button>
-      <button class="lang-selector-btn" onclick="setRecognitionLang('en-US', this)">EN</button>
-      <button class="lang-selector-btn" onclick="setRecognitionLang('zh-CN', this)">中文</button>
-      <button class="lang-selector-btn" onclick="setRecognitionLang('ko-KR', this)">한국</button>
-      <button class="lang-selector-btn" onclick="setRecognitionLang('de-DE', this)">DE</button>
-      <button class="lang-selector-btn" onclick="setRecognitionLang('fr-FR', this)">FR</button>
-    </div>
   </div>
 
   <!-- Instruction Card: Hearing -->
@@ -1513,11 +1522,14 @@ function setRecognitionLang(langCode, btn) {
   const lang = LANGUAGES.find(l => l.code === langCode);
 
   // Update active button
-  document.querySelectorAll('.lang-selector-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.lang-dropdown-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
   // Update status bar language label
   document.getElementById('statusLang').textContent = lang ? lang.name : langCode;
+
+  // Close dropdown
+  document.getElementById('langDropdown').classList.remove('open');
 
   gtag('event', 'set_recognition_lang', { language: langCode });
 
@@ -1529,6 +1541,17 @@ function setRecognitionLang(langCode, btn) {
     } catch(e) {}
   }
 }
+
+function toggleLangDropdown() {
+  document.getElementById('langDropdown').classList.toggle('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.status-lang-wrapper')) {
+    document.getElementById('langDropdown').classList.remove('open');
+  }
+});
 
 // ===== Speech Recognition =====
 let recognition = null;
@@ -1864,7 +1887,6 @@ function updateUI() {
   const container = document.getElementById('transcriptContainer');
   const instruction = document.getElementById('instructionCard');
   const instructionForeign = document.getElementById('instructionCardForeign');
-  const langSelector = document.getElementById('langSelector');
   const fontControl = document.getElementById('fontControl');
 
   if (isListening) {
@@ -1874,7 +1896,6 @@ function updateUI() {
     container.classList.add('visible');
     instruction.style.display = 'none';
     instructionForeign.style.display = 'none';
-    langSelector.style.display = 'none';
     fontControl.classList.add('visible');
   } else {
     btn.className = 'start-btn ready';
@@ -1887,7 +1908,6 @@ function updateUI() {
       setStatus('statusReady');
       instruction.style.display = '';
       instructionForeign.style.display = '';
-      langSelector.style.display = '';
     }
   }
   

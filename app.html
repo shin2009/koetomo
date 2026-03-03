@@ -12,13 +12,26 @@
 <title>KoeOkosi - 声おこし</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-62SRPEPWGN"></script>
+<!-- Google Analytics (loaded after cookie consent) -->
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-62SRPEPWGN');
+
+function loadGA() {
+  if (document.getElementById('ga-script')) return;
+  var s = document.createElement('script');
+  s.id = 'ga-script';
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-62SRPEPWGN';
+  document.head.appendChild(s);
+  gtag('js', new Date());
+  gtag('config', 'G-62SRPEPWGN');
+}
+
+// Auto-load if already consented
+if (localStorage.getItem('cookie_consent') === 'accepted') {
+  loadGA();
+}
 </script>
 <style>
 :root {
@@ -729,6 +742,52 @@ body::before {
   display: inline-flex;
 }
 
+/* ===== COOKIE CONSENT BANNER ===== */
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #333;
+  color: white;
+  padding: 16px 20px;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+.cookie-banner.visible {
+  display: flex;
+}
+
+.cookie-banner a {
+  color: #8fc7a6;
+  text-decoration: underline;
+}
+
+.cookie-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.cookie-btn.accept {
+  background: var(--green-deep);
+  color: white;
+}
+
+.cookie-btn.decline {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 380px) {
   html { font-size: 16px; }
@@ -1175,6 +1234,13 @@ body::before {
   <div class="hint-text" data-i18n="hint">対面での会話にお使いください</div>
 </div>
 
+<!-- Cookie Consent Banner -->
+<div class="cookie-banner" id="cookieBanner">
+  <span id="cookieText">このサイトではサービス改善のためCookieを使用しています。<a href="privacy.html">詳細</a></span>
+  <button class="cookie-btn accept" onclick="acceptCookies()">同意する</button>
+  <button class="cookie-btn decline" onclick="declineCookies()">拒否</button>
+</div>
+
 <!-- History Detail Modal -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
 <div class="modal" id="modal">
@@ -1223,6 +1289,9 @@ const i18n = {
     confirmDelete: 'この会話を削除しますか？',
     screenOn: '画面ON',
     flipOn: '反転中',
+    cookieText: 'このサイトではサービス改善のためCookieを使用しています。<a href="privacy.html">詳細</a>',
+    cookieAccept: '同意する',
+    cookieDecline: '拒否',
   },
   en: {
     subtitle: 'Voice to text, heart to heart',
@@ -1261,6 +1330,9 @@ const i18n = {
     confirmDelete: 'Delete this conversation?',
     screenOn: 'Screen ON',
     flipOn: 'Flipped',
+    cookieText: 'This site uses cookies to improve our service. <a href="privacy-en.html">Details</a>',
+    cookieAccept: 'Accept',
+    cookieDecline: 'Decline',
   }
 };
 
@@ -1657,7 +1729,7 @@ async function startListening() {
     listeningStartTime = Date.now();
     updateUI();
     requestWakeLock();
-    gtag('event', 'start_listening', { language: currentLang });
+    gtag('event', 'start_listening', { language: currentLang, browser_language: navigator.language });
   } catch(e) {
     console.error('Start error:', e);
   }
@@ -1673,7 +1745,13 @@ function stopListening() {
   removeInterim();
   releaseWakeLock();
   updateUI();
-  gtag('event', 'stop_listening', { duration_seconds: duration, lines_count: transcriptLines.length });
+  gtag('event', 'stop_listening', {
+    duration_seconds: duration,
+    lines_count: transcriptLines.length,
+    browser_language: navigator.language,
+    translate_used: translateEnabled,
+    flip_used: flipMode
+  });
   
   // Auto-save if there are lines
   if (transcriptLines.length > 0) {
@@ -2102,6 +2180,7 @@ function toggleFlip() {
     main.classList.remove('flip-active');
     btn.classList.remove('active');
   }
+  gtag('event', 'flip_mode', { enabled: flipMode });
 }
 
 // ===== Lifecycle =====
@@ -2115,11 +2194,33 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// ===== Cookie Consent =====
+function acceptCookies() {
+  localStorage.setItem('cookie_consent', 'accepted');
+  document.getElementById('cookieBanner').classList.remove('visible');
+  loadGA();
+}
+
+function declineCookies() {
+  localStorage.setItem('cookie_consent', 'declined');
+  document.getElementById('cookieBanner').classList.remove('visible');
+}
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
   initRecognition();
   loadHistory();
   updateFontLabel();
+
+  // Show cookie banner if no consent yet
+  const consent = localStorage.getItem('cookie_consent');
+  if (!consent) {
+    const lang = currentLang;
+    document.getElementById('cookieText').innerHTML = i18n[lang].cookieText;
+    document.querySelector('.cookie-btn.accept').textContent = i18n[lang].cookieAccept;
+    document.querySelector('.cookie-btn.decline').textContent = i18n[lang].cookieDecline;
+    document.getElementById('cookieBanner').classList.add('visible');
+  }
   
   // iOS Safari detection for install banner
   const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);

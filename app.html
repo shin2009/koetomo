@@ -742,6 +742,27 @@ body::before {
   display: inline-flex;
 }
 
+/* ===== FEEDBACK LINK ===== */
+.feedback-section {
+  text-align: center;
+  padding: 20px 0 100px;
+}
+
+.feedback-link {
+  color: var(--green-deep);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 10px 20px;
+  border: 1.5px solid var(--green-deep);
+  border-radius: 30px;
+  transition: all 0.2s;
+}
+
+.feedback-link:hover, .feedback-link:active {
+  background: var(--green-deep);
+  color: white;
+}
+
 /* ===== COOKIE CONSENT BANNER ===== */
 .cookie-banner {
   position: fixed;
@@ -1223,6 +1244,11 @@ body::before {
     <div id="historyList"></div>
   </div>
 
+  <!-- Feedback Link -->
+  <div class="feedback-section">
+    <a href="https://forms.gle/2xEQdiWJzHXoSBCc8" target="_blank" class="feedback-link" data-i18n="feedbackLink">💬 ご意見・ご感想をお聞かせください</a>
+  </div>
+
 </main>
 
 <!-- Bottom Controls -->
@@ -1292,6 +1318,7 @@ const i18n = {
     cookieText: 'このサイトではサービス改善のためCookieを使用しています。<a href="privacy.html">詳細</a>',
     cookieAccept: '同意する',
     cookieDecline: '拒否',
+    feedbackLink: '💬 ご意見・ご感想をお聞かせください',
   },
   en: {
     subtitle: 'Voice to text, heart to heart',
@@ -1333,6 +1360,7 @@ const i18n = {
     cookieText: 'This site uses cookies to improve our service. <a href="privacy-en.html">Details</a>',
     cookieAccept: 'Accept',
     cookieDecline: 'Decline',
+    feedbackLink: '💬 Share your feedback',
   }
 };
 

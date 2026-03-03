@@ -742,25 +742,17 @@ body::before {
   display: inline-flex;
 }
 
-/* ===== FEEDBACK LINK ===== */
-.feedback-section {
-  text-align: center;
-  padding: 20px 0 100px;
-}
-
-.feedback-link {
-  color: var(--green-deep);
+/* ===== FEEDBACK LINK (HEADER) ===== */
+.feedback-header-link {
   text-decoration: none;
-  font-size: 0.9rem;
-  padding: 10px 20px;
-  border: 1.5px solid var(--green-deep);
-  border-radius: 30px;
-  transition: all 0.2s;
+  font-size: 1.3rem;
+  margin-left: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-.feedback-link:hover, .feedback-link:active {
-  background: var(--green-deep);
-  color: white;
+.feedback-header-link:hover, .feedback-header-link:active {
+  opacity: 1;
 }
 
 /* ===== COOKIE CONSENT BANNER ===== */
@@ -1130,6 +1122,7 @@ body::before {
   <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">EN</button>
   <button class="lang-toggle" id="translateToggle" onclick="toggleTranslate()" style="margin-left:6px; opacity:0.6">訳</button>
   <button class="flip-btn" id="flipBtn" onclick="toggleFlip()" style="margin-left:4px;" title="画面反転">🔄</button>
+  <a href="https://forms.gle/2xEQdiWJzHXoSBCc8" target="_blank" class="feedback-header-link" title="フィードバック">💬</a>
 </header>
 
 <!-- PWA Install Banner (Android/Chrome) -->
@@ -1244,10 +1237,6 @@ body::before {
     <div id="historyList"></div>
   </div>
 
-  <!-- Feedback Link -->
-  <div class="feedback-section">
-    <a href="https://forms.gle/2xEQdiWJzHXoSBCc8" target="_blank" class="feedback-link" data-i18n="feedbackLink">💬 ご意見・ご感想をお聞かせください</a>
-  </div>
 
 </main>
 

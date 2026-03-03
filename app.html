@@ -233,22 +233,23 @@ body::before {
 
 .lang-dropdown.open {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .lang-dropdown-btn {
   background: var(--green-pale);
   color: var(--green-deep);
   border: 2px solid transparent;
-  padding: 8px 14px;
-  border-radius: 50px;
-  font-size: 0.85rem;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
   white-space: nowrap;
+  text-align: left;
 }
 
 .lang-dropdown-btn.active {
@@ -1216,12 +1217,12 @@ body::before {
   <div class="status-lang-wrapper">
     <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">言語モード　日本語</button>
     <div class="lang-dropdown" id="langDropdown">
-      <button class="lang-dropdown-btn active" data-lang="ja-JP" onclick="setRecognitionLang('ja-JP', this)">JA</button>
-      <button class="lang-dropdown-btn" data-lang="en-US" onclick="setRecognitionLang('en-US', this)">EN</button>
-      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setRecognitionLang('zh-CN', this)">中文</button>
-      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setRecognitionLang('ko-KR', this)">한국</button>
-      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setRecognitionLang('de-DE', this)">DE</button>
-      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setRecognitionLang('fr-FR', this)">FR</button>
+      <button class="lang-dropdown-btn active" data-lang="ja-JP" onclick="setRecognitionLang('ja-JP', this)">🇯🇵 日本語</button>
+      <button class="lang-dropdown-btn" data-lang="en-US" onclick="setRecognitionLang('en-US', this)">🇺🇸 English</button>
+      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setRecognitionLang('zh-CN', this)">🇨🇳 中文</button>
+      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setRecognitionLang('ko-KR', this)">🇰🇷 한국어</button>
+      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setRecognitionLang('de-DE', this)">🇩🇪 Deutsch</button>
+      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setRecognitionLang('fr-FR', this)">🇫🇷 Français</button>
     </div>
   </div>
 </div>

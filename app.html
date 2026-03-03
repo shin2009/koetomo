@@ -669,6 +669,36 @@ body::before {
   gap: 12px;
 }
 
+/* ===== SPEAKER TOGGLE ===== */
+.speaker-toggle {
+  display: flex;
+  background: var(--green-pale);
+  border-radius: 50px;
+  padding: 3px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.speaker-toggle-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  background: transparent;
+  color: var(--green-deep);
+}
+
+.speaker-toggle-btn.active {
+  background: var(--green-main);
+  color: white;
+  box-shadow: 0 2px 8px rgba(45, 138, 86, 0.3);
+}
+
 .start-btn {
   width: 100%;
   max-width: 400px;
@@ -1215,14 +1245,13 @@ body::before {
   <span class="status-text" id="statusText" data-i18n="statusReady">マイクの準備ができています</span>
   <span class="wakelock-indicator" id="wakelockIndicator">🔒 <span data-i18n="screenOn">画面ON</span></span>
   <div class="status-lang-wrapper">
-    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">言語モード　日本語</button>
+    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">相手の言語　English</button>
     <div class="lang-dropdown" id="langDropdown">
-      <button class="lang-dropdown-btn active" data-lang="ja-JP" onclick="setRecognitionLang('ja-JP', this)">🇯🇵 日本語</button>
-      <button class="lang-dropdown-btn" data-lang="en-US" onclick="setRecognitionLang('en-US', this)">🇺🇸 English</button>
-      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setRecognitionLang('zh-CN', this)">🇨🇳 中文</button>
-      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setRecognitionLang('ko-KR', this)">🇰🇷 한국어</button>
-      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setRecognitionLang('de-DE', this)">🇩🇪 Deutsch</button>
-      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setRecognitionLang('fr-FR', this)">🇫🇷 Français</button>
+      <button class="lang-dropdown-btn active" data-lang="en-US" onclick="setPartnerLang('en-US', this)">🇺🇸 English</button>
+      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setPartnerLang('zh-CN', this)">🇨🇳 中文</button>
+      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setPartnerLang('ko-KR', this)">🇰🇷 한국어</button>
+      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setPartnerLang('de-DE', this)">🇩🇪 Deutsch</button>
+      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setPartnerLang('fr-FR', this)">🇫🇷 Français</button>
     </div>
   </div>
 </div>
@@ -1278,15 +1307,15 @@ body::before {
     <div class="instruction-steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-text" data-i18n="foreignStep1"><strong>「訳」</strong>ボタンをONにする</div>
+        <div class="step-text" data-i18n="foreignStep1"><strong>「訳」</strong>ボタンをONにして<strong>相手の言語</strong>を選ぶ</div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text" data-i18n="foreignStep2">相手が話すときは<strong>言語モードを相手の言語</strong>に変えて聞きとり開始</div>
+        <div class="step-text" data-i18n="foreignStep2">相手が話すときは<strong>「相手が話す」</strong>で聞きとり</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-text" data-i18n="foreignStep3">自分が話すときは<strong>言語モードを「JA」</strong>に戻す</div>
+        <div class="step-text" data-i18n="foreignStep3">自分が話すときは<strong>「自分が話す」</strong>に切り替える</div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
@@ -1332,6 +1361,10 @@ body::before {
 
 <!-- Bottom Controls -->
 <div class="bottom-controls">
+  <div class="speaker-toggle" id="speakerToggle" style="display:none">
+    <button class="speaker-toggle-btn active" id="speakerSelf" onclick="setSpeakerMode('self')">🗣️ 自分が話す</button>
+    <button class="speaker-toggle-btn" id="speakerPartner" onclick="setSpeakerMode('partner')">👤 相手が話す</button>
+  </div>
   <button class="start-btn ready" id="startBtn" onclick="toggleListening()">
     <span class="btn-icon">🎙️</span>
     <span data-i18n="startBtn">聞きとり開始</span>
@@ -1370,9 +1403,9 @@ const i18n = {
     step1: '下の<strong>「聞きとり開始」</strong>ボタンを押す',
     step2: '自分が話すと<strong>文字に変換</strong>されます',
     step3: '右上の<strong>🔄ボタン</strong>で画面を反転して相手に見せる',
-    foreignStep1: '<strong>「訳」</strong>ボタンをONにする',
-    foreignStep2: '相手が話すときは<strong>言語モードを相手の言語</strong>に変えて聞きとり開始',
-    foreignStep3: '自分が話すときは<strong>言語モードを「JA」</strong>に戻す',
+    foreignStep1: '<strong>「訳」</strong>ボタンをONにして<strong>相手の言語</strong>を選ぶ',
+    foreignStep2: '相手が話すときは<strong>「相手が話す」</strong>で聞きとり',
+    foreignStep3: '自分が話すときは<strong>「自分が話す」</strong>に切り替える',
     foreignStepFlip: '<strong>🔄ボタン</strong>で画面を反転して翻訳を相手に見せる',
     transcriptTitle: '📝 会話の内容',
     waitingVoice: '音声を待っています...',
@@ -1416,9 +1449,9 @@ const i18n = {
     step1: 'Press the <strong>"Start Listening"</strong> button below',
     step2: 'Speak and your voice becomes <strong>text</strong>',
     step3: 'Tap <strong>🔄</strong> to flip the screen and show text to the other person',
-    foreignStep1: 'Turn on <strong>"TR"</strong> button',
-    foreignStep2: 'Change <strong>language mode to their language</strong> and start listening',
-    foreignStep3: 'Switch <strong>language mode back to "JA"</strong> when you speak',
+    foreignStep1: 'Turn on <strong>"TR"</strong> and select <strong>their language</strong>',
+    foreignStep2: 'Tap <strong>"Partner speaks"</strong> when they talk',
+    foreignStep3: 'Tap <strong>"I speak"</strong> when you talk',
     foreignStepFlip: 'Tap <strong>🔄</strong> to flip the screen and show translation to them',
     transcriptTitle: '📝 Conversation',
     waitingVoice: 'Waiting for voice...',
@@ -1455,9 +1488,10 @@ let currentLang = 'ja';
 let recognitionLang = 'ja-JP';
 let translateEnabled = false;
 let partnerLang = 'en'; // Google Translate target language code
+let partnerLangCode = 'en-US'; // Speech recognition code for partner
+let speakerMode = 'self'; // 'self' or 'partner'
 
 const LANGUAGES = [
-  { code: 'ja-JP', label: 'JA', name: '日本語', tl: 'ja' },
   { code: 'en-US', label: 'EN', name: 'English', tl: 'en' },
   { code: 'zh-CN', label: '中文', name: '中文', tl: 'zh' },
   { code: 'ko-KR', label: '한국', name: '한국어', tl: 'ko' },
@@ -1495,15 +1529,23 @@ function toggleTranslate() {
   translateEnabled = !translateEnabled;
   gtag('event', 'toggle_translate', { enabled: translateEnabled, language: currentLang });
   const btn = document.getElementById('translateToggle');
-  
+  const speakerToggle = document.getElementById('speakerToggle');
+
   if (translateEnabled) {
     btn.classList.add('translate-active');
     btn.textContent = currentLang === 'ja' ? '訳✓' : 'TR✓';
+    // Show speaker toggle
+    speakerToggle.style.display = '';
     // Translate existing lines
     retranslateAll();
   } else {
     btn.classList.remove('translate-active');
     btn.textContent = currentLang === 'ja' ? '訳' : 'TR';
+    // Hide speaker toggle and reset to self mode
+    speakerToggle.style.display = 'none';
+    if (speakerMode !== 'self') {
+      setSpeakerMode('self');
+    }
     // Remove translations from display
     document.querySelectorAll('.translated').forEach(el => el.remove());
     // Clear stored translations
@@ -1520,33 +1562,58 @@ async function retranslateAll() {
   renderTranscript();
 }
 
-function setRecognitionLang(langCode, btn) {
-  recognitionLang = langCode;
+function setPartnerLang(langCode, btn) {
   const lang = LANGUAGES.find(l => l.code === langCode);
+  if (!lang) return;
 
-  // Remember partner language (last non-Japanese selection)
-  if (lang && lang.tl !== 'ja') {
-    partnerLang = lang.tl;
-  }
+  partnerLang = lang.tl;
+  partnerLangCode = langCode;
 
   // Update active button
   document.querySelectorAll('.lang-dropdown-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
   // Update status bar language label
-  document.getElementById('statusLang').textContent = '言語モード\u3000' + (lang ? lang.name : langCode);
+  document.getElementById('statusLang').textContent = '相手の言語\u3000' + lang.name;
 
   // Close dropdown
   document.getElementById('langDropdown').classList.remove('open');
 
-  gtag('event', 'set_recognition_lang', { language: langCode });
+  gtag('event', 'set_partner_lang', { language: langCode });
+
+  // If currently in partner mode, update recognition language
+  if (speakerMode === 'partner') {
+    recognitionLang = partnerLangCode;
+    if (isListening && recognition) {
+      recognition.lang = recognitionLang;
+      try { recognition.stop(); } catch(e) {}
+    }
+  }
+}
+
+function setSpeakerMode(mode) {
+  speakerMode = mode;
+
+  // Update toggle buttons
+  document.getElementById('speakerSelf').classList.toggle('active', mode === 'self');
+  document.getElementById('speakerPartner').classList.toggle('active', mode === 'partner');
+
+  // Set recognition language based on speaker mode
+  if (mode === 'self') {
+    recognitionLang = 'ja-JP';
+  } else {
+    recognitionLang = partnerLangCode;
+  }
+
+  // Update button text
+  updateButtonText();
+
+  gtag('event', 'set_speaker_mode', { mode: mode });
 
   // Restart recognition with new language if listening
   if (isListening && recognition) {
     recognition.lang = recognitionLang;
-    try {
-      recognition.stop();
-    } catch(e) {}
+    try { recognition.stop(); } catch(e) {}
   }
 }
 
@@ -1926,11 +1993,17 @@ function updateUI() {
 function updateButtonText() {
   const btn = document.getElementById('startBtn');
   const t = i18n[currentLang];
-  
+
   if (isListening) {
     btn.innerHTML = `<span class="sound-wave active"><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></span> ${t.stopBtn}`;
   } else {
-    btn.innerHTML = `<span class="btn-icon">🎙️</span> ${t.startBtn}`;
+    if (translateEnabled && speakerMode === 'partner') {
+      const lang = LANGUAGES.find(l => l.code === partnerLangCode);
+      const langName = lang ? lang.name : 'English';
+      btn.innerHTML = `<span class="btn-icon">🎙️</span> ${langName} ${t.startBtn}`;
+    } else {
+      btn.innerHTML = `<span class="btn-icon">🎙️</span> ${t.startBtn}`;
+    }
   }
 }
 

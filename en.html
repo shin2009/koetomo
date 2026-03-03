@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a5632">
-<meta name="description" content="KoeOkosi turns phone call audio into text in real time. Free accessibility tool for the hearing impaired, language learners, and business professionals.">
-<meta property="og:title" content="KoeOkosi - Real-Time Call Transcription">
-<meta property="og:description" content="Turn phone call audio into text in real time. Free accessibility tool for the hearing impaired, language learners, and business professionals.">
+<meta name="description" content="KoeOkosi turns speech into text in real time. Free accessibility tool for conversations with the hearing impaired and foreign language speakers.">
+<meta property="og:title" content="KoeOkosi - Real-Time Speech to Text">
+<meta property="og:description" content="Turn speech into text in real time. Free accessibility tool for conversations with the hearing impaired and foreign language speakers.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://koeokosi.vercel.app/en.html">
 <link rel="icon" href="icon-192.png">
-<title>KoeOkosi - Real-Time Call Transcription</title>
+<title>KoeOkosi - Real-Time Speech to Text</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
 
@@ -350,6 +350,22 @@ body {
   margin-bottom: 20px;
 }
 
+/* ===== STORY ===== */
+.story-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(45, 138, 86, 0.08);
+  line-height: 2;
+  font-size: 0.95rem;
+  color: var(--text-mid);
+}
+
+.story-card p + p {
+  margin-top: 8px;
+}
+
 /* ===== FOOTER ===== */
 .footer {
   background: var(--green-deep);
@@ -392,7 +408,7 @@ body {
     <div class="hero-logo-text">KoeOkosi</div>
   </div>
   <h1>Turn Speech Into Text,<br>Instantly.</h1>
-  <p>Real-time speech-to-text for conversations and calls.<br>See every word on screen, even when hearing is difficult.</p>
+  <p>Real-time speech-to-text for face-to-face conversations.<br>See every word on screen, even when hearing is difficult.</p>
   <a href="app.html" class="cta-btn">Try the App</a>
   <span class="cta-sub">Free - No sign-up - No install required</span>
 </section>
@@ -405,7 +421,7 @@ body {
       <div class="target-icon">👂</div>
       <div>
         <h3>People with Hearing Difficulties</h3>
-        <p>Can't catch what's being said? See every word as text in real time. Works for face-to-face conversations and phone calls.</p>
+        <p>Can't catch what's being said? See every word as text in real time. Works for face-to-face conversations.</p>
       </div>
     </div>
     <div class="target-card">
@@ -492,6 +508,16 @@ body {
 <section class="cta-bottom">
   <p>Ready to try it?</p>
   <a href="app.html" class="cta-btn" style="background: linear-gradient(135deg, var(--green-main), var(--green-light)); color: white;">Try the App</a>
+</section>
+
+<!-- Story -->
+<section class="section">
+  <h2 class="section-title">Why We Built This</h2>
+  <div class="story-card">
+    <p>My father-in-law has difficulty hearing, and everyday conversations were always a struggle for our family.</p>
+    <p>"If only my words could become text, we could talk so much more easily."</p>
+    <p>That thought inspired us to create this app.</p>
+  </div>
 </section>
 
 <!-- Footer -->

@@ -1586,7 +1586,11 @@ function setPartnerLang(langCode, btn) {
     recognitionLang = partnerLangCode;
     if (isListening && recognition) {
       recognition.lang = recognitionLang;
-      try { recognition.stop(); } catch(e) {}
+      try {
+        recognition.abort();
+      } catch(e) {
+        console.warn('Recognition abort failed:', e);
+      }
     }
   }
 }
@@ -1612,8 +1616,13 @@ function setSpeakerMode(mode) {
 
   // Restart recognition with new language if listening
   if (isListening && recognition) {
+    // Stop and let onend handler restart with the new language
     recognition.lang = recognitionLang;
-    try { recognition.stop(); } catch(e) {}
+    try {
+      recognition.abort();
+    } catch(e) {
+      console.warn('Recognition abort failed:', e);
+    }
   }
 }
 
@@ -1878,6 +1887,7 @@ function initRecognition() {
         } catch(e) {
           console.error('Recognition restart failed:', e);
           isListening = false;
+          initRecognition(); // Recreate to recover from broken state
           updateUI();
         }
       }, delay);
@@ -1935,6 +1945,10 @@ async function startListening() {
     });
   } catch(e) {
     console.error('Start error:', e);
+    // Recreate recognition to recover from InvalidStateError
+    isListening = false;
+    initRecognition();
+    updateUI();
   }
 }
 

@@ -235,6 +235,8 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .lang-dropdown-btn {
@@ -1249,7 +1251,10 @@ body::before {
     <div class="lang-dropdown" id="langDropdown">
       <button class="lang-dropdown-btn active" data-lang="en-US" onclick="setPartnerLang('en-US', this)">🇺🇸 English</button>
       <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setPartnerLang('zh-CN', this)">🇨🇳 中文</button>
+      <button class="lang-dropdown-btn" data-lang="zh-TW" onclick="setPartnerLang('zh-TW', this)">🇹🇼 繁體中文</button>
       <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setPartnerLang('ko-KR', this)">🇰🇷 한국어</button>
+      <button class="lang-dropdown-btn" data-lang="th-TH" onclick="setPartnerLang('th-TH', this)">🇹🇭 ไทย</button>
+      <button class="lang-dropdown-btn" data-lang="vi-VN" onclick="setPartnerLang('vi-VN', this)">🇻🇳 Tiếng Việt</button>
       <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setPartnerLang('de-DE', this)">🇩🇪 Deutsch</button>
       <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setPartnerLang('fr-FR', this)">🇫🇷 Français</button>
     </div>
@@ -1494,7 +1499,10 @@ let speakerMode = 'self'; // 'self' or 'partner'
 const LANGUAGES = [
   { code: 'en-US', label: 'EN', name: 'English', tl: 'en' },
   { code: 'zh-CN', label: '中文', name: '中文', tl: 'zh' },
+  { code: 'zh-TW', label: '繁體', name: '繁體中文', tl: 'zh-TW' },
   { code: 'ko-KR', label: '한국', name: '한국어', tl: 'ko' },
+  { code: 'th-TH', label: 'TH', name: 'ไทย', tl: 'th' },
+  { code: 'vi-VN', label: 'VI', name: 'Tiếng Việt', tl: 'vi' },
   { code: 'de-DE', label: 'DE', name: 'Deutsch', tl: 'de' },
   { code: 'fr-FR', label: 'FR', name: 'Français', tl: 'fr' },
 ];

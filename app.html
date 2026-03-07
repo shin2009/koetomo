@@ -2050,23 +2050,43 @@ function addTranscriptLine(text, isFinal) {
   });
 
   if (isFinal) {
-    // Skip duplicate: same text as the last line
     const lastLine = transcriptLines[transcriptLines.length - 1];
-    if (lastLine && lastLine.text.trim() === text.trim()) {
+    const trimmed = text.trim();
+
+    // Skip duplicate: same text as the last line
+    if (lastLine && lastLine.text.trim() === trimmed) {
       return;
     }
-    const lineObj = { text, time, ts: Date.now() };
-    transcriptLines.push(lineObj);
 
-    // Auto-translate if enabled
-    if (translateEnabled) {
-      translateText(text).then(translated => {
-        if (translated) {
-          lineObj.translation = translated;
-          renderTranscript();
-          scrollToTop();
-        }
-      });
+    // Progressive refinement: if new text extends the last line, replace it
+    // (e.g. "what" → "what do" → "what do you think")
+    if (lastLine && trimmed.startsWith(lastLine.text.trim())) {
+      lastLine.text = text;
+      lastLine.time = time;
+      lastLine.ts = Date.now();
+      if (translateEnabled) {
+        translateText(text).then(translated => {
+          if (translated) {
+            lastLine.translation = translated;
+            renderTranscript();
+            scrollToTop();
+          }
+        });
+      }
+    } else {
+      const lineObj = { text, time, ts: Date.now() };
+      transcriptLines.push(lineObj);
+
+      // Auto-translate if enabled
+      if (translateEnabled) {
+        translateText(text).then(translated => {
+          if (translated) {
+            lineObj.translation = translated;
+            renderTranscript();
+            scrollToTop();
+          }
+        });
+      }
     }
   }
 

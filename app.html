@@ -1247,16 +1247,16 @@ body::before {
   <span class="status-text" id="statusText" data-i18n="statusReady">マイクの準備ができています</span>
   <span class="wakelock-indicator" id="wakelockIndicator">🔒 <span data-i18n="screenOn">画面ON</span></span>
   <div class="status-lang-wrapper">
-    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">相手の言語　English</button>
+    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">相手の言語　英語</button>
     <div class="lang-dropdown" id="langDropdown">
-      <button class="lang-dropdown-btn active" data-lang="en-US" onclick="setPartnerLang('en-US', this)">🇺🇸 English</button>
-      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setPartnerLang('zh-CN', this)">🇨🇳 中文</button>
-      <button class="lang-dropdown-btn" data-lang="zh-TW" onclick="setPartnerLang('zh-TW', this)">🇹🇼 繁體中文</button>
-      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setPartnerLang('ko-KR', this)">🇰🇷 한국어</button>
-      <button class="lang-dropdown-btn" data-lang="th-TH" onclick="setPartnerLang('th-TH', this)">🇹🇭 ไทย</button>
-      <button class="lang-dropdown-btn" data-lang="vi-VN" onclick="setPartnerLang('vi-VN', this)">🇻🇳 Tiếng Việt</button>
-      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setPartnerLang('de-DE', this)">🇩🇪 Deutsch</button>
-      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setPartnerLang('fr-FR', this)">🇫🇷 Français</button>
+      <button class="lang-dropdown-btn active" data-lang="en-US" onclick="setPartnerLang('en-US', this)">🇺🇸 英語</button>
+      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setPartnerLang('zh-CN', this)">🇨🇳 中国語</button>
+      <button class="lang-dropdown-btn" data-lang="zh-TW" onclick="setPartnerLang('zh-TW', this)">🇹🇼 台湾語</button>
+      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setPartnerLang('ko-KR', this)">🇰🇷 韓国語</button>
+      <button class="lang-dropdown-btn" data-lang="th-TH" onclick="setPartnerLang('th-TH', this)">🇹🇭 タイ語</button>
+      <button class="lang-dropdown-btn" data-lang="vi-VN" onclick="setPartnerLang('vi-VN', this)">🇻🇳 ベトナム語</button>
+      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setPartnerLang('de-DE', this)">🇩🇪 ドイツ語</button>
+      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setPartnerLang('fr-FR', this)">🇫🇷 フランス語</button>
     </div>
   </div>
 </div>
@@ -1497,14 +1497,14 @@ let partnerLangCode = 'en-US'; // Speech recognition code for partner
 let speakerMode = 'self'; // 'self' or 'partner'
 
 const LANGUAGES = [
-  { code: 'en-US', label: 'EN', name: 'English', tl: 'en' },
-  { code: 'zh-CN', label: '中文', name: '中文', tl: 'zh' },
-  { code: 'zh-TW', label: '繁體', name: '繁體中文', tl: 'zh-TW' },
-  { code: 'ko-KR', label: '한국', name: '한국어', tl: 'ko' },
-  { code: 'th-TH', label: 'TH', name: 'ไทย', tl: 'th' },
-  { code: 'vi-VN', label: 'VI', name: 'Tiếng Việt', tl: 'vi' },
-  { code: 'de-DE', label: 'DE', name: 'Deutsch', tl: 'de' },
-  { code: 'fr-FR', label: 'FR', name: 'Français', tl: 'fr' },
+  { code: 'en-US', label: 'EN', name: '英語', tl: 'en' },
+  { code: 'zh-CN', label: '中文', name: '中国語', tl: 'zh' },
+  { code: 'zh-TW', label: '繁體', name: '台湾語', tl: 'zh-TW' },
+  { code: 'ko-KR', label: '한국', name: '韓国語', tl: 'ko' },
+  { code: 'th-TH', label: 'TH', name: 'タイ語', tl: 'th' },
+  { code: 'vi-VN', label: 'VI', name: 'ベトナム語', tl: 'vi' },
+  { code: 'de-DE', label: 'DE', name: 'ドイツ語', tl: 'de' },
+  { code: 'fr-FR', label: 'FR', name: 'フランス語', tl: 'fr' },
 ];
 
 // ===== Translation =====
@@ -2031,7 +2031,7 @@ function updateButtonText() {
   } else {
     if (translateEnabled && speakerMode === 'partner') {
       const lang = LANGUAGES.find(l => l.code === partnerLangCode);
-      const langName = lang ? lang.name : 'English';
+      const langName = lang ? lang.name : '英語';
       btn.innerHTML = `<span class="btn-icon">🎙️</span> ${langName} ${t.startBtn}`;
     } else {
       btn.innerHTML = `<span class="btn-icon">🎙️</span> ${t.startBtn}`;

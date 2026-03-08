@@ -1247,17 +1247,8 @@ body::before {
   <span class="status-text" id="statusText" data-i18n="statusReady">マイクの準備ができています</span>
   <span class="wakelock-indicator" id="wakelockIndicator">🔒 <span data-i18n="screenOn">画面ON</span></span>
   <div class="status-lang-wrapper">
-    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()">相手の言語　英語</button>
-    <div class="lang-dropdown" id="langDropdown">
-      <button class="lang-dropdown-btn active" data-lang="en-US" onclick="setPartnerLang('en-US', this)">🇺🇸 英語</button>
-      <button class="lang-dropdown-btn" data-lang="zh-CN" onclick="setPartnerLang('zh-CN', this)">🇨🇳 中国語</button>
-      <button class="lang-dropdown-btn" data-lang="zh-TW" onclick="setPartnerLang('zh-TW', this)">🇹🇼 台湾語</button>
-      <button class="lang-dropdown-btn" data-lang="ko-KR" onclick="setPartnerLang('ko-KR', this)">🇰🇷 韓国語</button>
-      <button class="lang-dropdown-btn" data-lang="th-TH" onclick="setPartnerLang('th-TH', this)">🇹🇭 タイ語</button>
-      <button class="lang-dropdown-btn" data-lang="vi-VN" onclick="setPartnerLang('vi-VN', this)">🇻🇳 ベトナム語</button>
-      <button class="lang-dropdown-btn" data-lang="de-DE" onclick="setPartnerLang('de-DE', this)">🇩🇪 ドイツ語</button>
-      <button class="lang-dropdown-btn" data-lang="fr-FR" onclick="setPartnerLang('fr-FR', this)">🇫🇷 フランス語</button>
-    </div>
+    <button class="status-lang" id="statusLang" onclick="toggleLangDropdown()"></button>
+    <div class="lang-dropdown" id="langDropdown"></div>
   </div>
 </div>
 
@@ -1367,8 +1358,8 @@ body::before {
 <!-- Bottom Controls -->
 <div class="bottom-controls">
   <div class="speaker-toggle" id="speakerToggle" style="display:none">
-    <button class="speaker-toggle-btn active" id="speakerSelf" onclick="setSpeakerMode('self')">🗣️ 自分が話す</button>
-    <button class="speaker-toggle-btn" id="speakerPartner" onclick="setSpeakerMode('partner')">👤 相手が話す</button>
+    <button class="speaker-toggle-btn active" id="speakerSelf" onclick="setSpeakerMode('self')" data-i18n="speakerSelf">🗣️ 自分が話す</button>
+    <button class="speaker-toggle-btn" id="speakerPartner" onclick="setSpeakerMode('partner')" data-i18n="speakerPartner">👤 相手が話す</button>
   </div>
   <button class="start-btn ready" id="startBtn" onclick="toggleListening()">
     <span class="btn-icon">🎙️</span>
@@ -1436,6 +1427,8 @@ const i18n = {
     confirmDelete: 'この会話を削除しますか？',
     screenOn: '画面ON',
     flipOn: '反転中',
+    speakerSelf: '🗣️ 自分が話す',
+    speakerPartner: '👤 相手が話す',
     cookieText: 'このサイトではサービス改善のためCookieを使用しています。<a href="privacy.html">詳細</a>',
     cookieAccept: '同意する',
     cookieDecline: '拒否',
@@ -1482,6 +1475,8 @@ const i18n = {
     confirmDelete: 'Delete this conversation?',
     screenOn: 'Screen ON',
     flipOn: 'Flipped',
+    speakerSelf: '🗣️ I speak',
+    speakerPartner: '👤 Partner speaks',
     cookieText: 'This site uses cookies to improve our service. <a href="privacy-en.html">Details</a>',
     cookieAccept: 'Accept',
     cookieDecline: 'Decline',
@@ -1489,43 +1484,82 @@ const i18n = {
   }
 };
 
-let currentLang = 'ja';
-let recognitionLang = 'ja-JP';
+// Auto-detect language from browser
+const browserLang = (navigator.language || 'ja').split('-')[0];
+const isJapanese = browserLang === 'ja';
+let currentLang = isJapanese ? 'ja' : 'en';
+
+// Map browser language to speech recognition code
+const BROWSER_LANG_MAP = {
+  'en': 'en-US', 'zh': 'zh-CN', 'ko': 'ko-KR', 'th': 'th-TH',
+  'vi': 'vi-VN', 'de': 'de-DE', 'fr': 'fr-FR', 'ja': 'ja-JP',
+};
+let recognitionLang = BROWSER_LANG_MAP[browserLang] || 'en-US';
+// For Japanese users, default is ja-JP. For others, their browser language.
+
 let translateEnabled = false;
-let partnerLang = 'en'; // Google Translate target language code
-let partnerLangCode = 'en-US'; // Speech recognition code for partner
+// Default partner language: Japanese users → English, others → Japanese
+let partnerLang = isJapanese ? 'en' : 'ja';
+let partnerLangCode = isJapanese ? 'en-US' : 'ja-JP';
 let speakerMode = 'self'; // 'self' or 'partner'
 
 const LANGUAGES = [
-  { code: 'en-US', label: 'EN', name: '英語', tl: 'en' },
-  { code: 'zh-CN', label: '中文', name: '中国語', tl: 'zh' },
-  { code: 'zh-TW', label: '繁體', name: '台湾語', tl: 'zh-TW' },
-  { code: 'ko-KR', label: '한국', name: '韓国語', tl: 'ko' },
-  { code: 'th-TH', label: 'TH', name: 'タイ語', tl: 'th' },
-  { code: 'vi-VN', label: 'VI', name: 'ベトナム語', tl: 'vi' },
-  { code: 'de-DE', label: 'DE', name: 'ドイツ語', tl: 'de' },
-  { code: 'fr-FR', label: 'FR', name: 'フランス語', tl: 'fr' },
+  { code: 'ja-JP', flag: '🇯🇵', name: { ja: '日本語', en: 'Japanese' }, tl: 'ja' },
+  { code: 'en-US', flag: '🇺🇸', name: { ja: '英語', en: 'English' }, tl: 'en' },
+  { code: 'zh-CN', flag: '🇨🇳', name: { ja: '中国語', en: 'Chinese' }, tl: 'zh' },
+  { code: 'zh-TW', flag: '🇹🇼', name: { ja: '台湾語', en: 'Taiwanese' }, tl: 'zh-TW' },
+  { code: 'ko-KR', flag: '🇰🇷', name: { ja: '韓国語', en: 'Korean' }, tl: 'ko' },
+  { code: 'th-TH', flag: '🇹🇭', name: { ja: 'タイ語', en: 'Thai' }, tl: 'th' },
+  { code: 'vi-VN', flag: '🇻🇳', name: { ja: 'ベトナム語', en: 'Vietnamese' }, tl: 'vi' },
+  { code: 'de-DE', flag: '🇩🇪', name: { ja: 'ドイツ語', en: 'German' }, tl: 'de' },
+  { code: 'fr-FR', flag: '🇫🇷', name: { ja: 'フランス語', en: 'French' }, tl: 'fr' },
 ];
 
+// Build partner language dropdown (exclude user's own language)
+function buildLangDropdown() {
+  const dropdown = document.getElementById('langDropdown');
+  dropdown.innerHTML = '';
+  // Exclude the user's own language from the partner list
+  const selfLangCode = BROWSER_LANG_MAP[browserLang] || 'en-US';
+  const partnerLangs = LANGUAGES.filter(l => l.code !== selfLangCode);
+  partnerLangs.forEach(lang => {
+    const btn = document.createElement('button');
+    btn.className = 'lang-dropdown-btn' + (lang.code === partnerLangCode ? ' active' : '');
+    btn.dataset.lang = lang.code;
+    btn.onclick = function() { setPartnerLang(lang.code, this); };
+    btn.textContent = lang.flag + ' ' + lang.name[currentLang];
+    dropdown.appendChild(btn);
+  });
+  // Update status bar label
+  const partnerLangObj = LANGUAGES.find(l => l.code === partnerLangCode);
+  if (partnerLangObj) {
+    const label = currentLang === 'ja' ? '相手の言語' : 'Partner';
+    document.getElementById('statusLang').textContent = label + '\u3000' + partnerLangObj.name[currentLang];
+  }
+}
+
 // ===== Translation =====
+// User's own language code for translation (ja, en, de, etc.)
+const myLangTl = isJapanese ? 'ja' : (browserLang || 'en');
+
 async function translateText(text) {
   try {
-    // Auto-detect source language
-    const detectUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ja&dt=t&q=${encodeURIComponent(text)}`;
+    // Auto-detect source language, translate toward user's language as default
+    const detectUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${myLangTl}&dt=t&q=${encodeURIComponent(text)}`;
     const detectRes = await fetch(detectUrl);
     const detectData = await detectRes.json();
     const detectedLang = detectData[2]; // detected source language code
 
-    // Japanese detected -> translate to partner's language
-    if (detectedLang === 'ja') {
-      if (partnerLang === 'ja') return null; // same language, no translation needed
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=${partnerLang}&dt=t&q=${encodeURIComponent(text)}`;
+    // User's own language detected -> translate to partner's language
+    if (detectedLang === myLangTl || detectedLang === browserLang) {
+      if (partnerLang === myLangTl) return null; // same language, no translation needed
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${myLangTl}&tl=${partnerLang}&dt=t&q=${encodeURIComponent(text)}`;
       const res = await fetch(url);
       const data = await res.json();
       return data[0].map(item => item[0]).join('');
     }
 
-    // Other language detected -> translate to Japanese
+    // Other language detected -> translate to user's language (already done in detect call)
     return detectData[0].map(item => item[0]).join('');
   } catch(e) {
     console.warn('Translation failed:', e);
@@ -1582,7 +1616,8 @@ function setPartnerLang(langCode, btn) {
   if (btn) btn.classList.add('active');
 
   // Update status bar language label
-  document.getElementById('statusLang').textContent = '相手の言語\u3000' + lang.name;
+  const partnerLabel = currentLang === 'ja' ? '相手の言語' : 'Partner';
+  document.getElementById('statusLang').textContent = partnerLabel + '\u3000' + lang.name[currentLang];
 
   // Close dropdown
   document.getElementById('langDropdown').classList.remove('open');
@@ -1612,7 +1647,7 @@ function setSpeakerMode(mode) {
 
   // Set recognition language based on speaker mode
   if (mode === 'self') {
-    recognitionLang = 'ja-JP';
+    recognitionLang = BROWSER_LANG_MAP[browserLang] || 'en-US';
   } else {
     recognitionLang = partnerLangCode;
   }
@@ -2031,7 +2066,7 @@ function updateButtonText() {
   } else {
     if (translateEnabled && speakerMode === 'partner') {
       const lang = LANGUAGES.find(l => l.code === partnerLangCode);
-      const langName = lang ? lang.name : '英語';
+      const langName = lang ? lang.name[currentLang] : (currentLang === 'ja' ? '英語' : 'English');
       btn.innerHTML = `<span class="btn-icon">🎙️</span> ${langName} ${t.startBtn}`;
     } else {
       btn.innerHTML = `<span class="btn-icon">🎙️</span> ${t.startBtn}`;
@@ -2465,7 +2500,19 @@ function declineCookies() {
 }
 
 // ===== Init =====
+// Apply i18n texts to all elements with data-i18n attribute
+function applyLanguage() {
+  const t = i18n[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.innerHTML = t[key];
+  });
+  buildLangDropdown();
+  updateUI();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  applyLanguage();
   initRecognition();
   loadHistory();
   updateFontLabel();

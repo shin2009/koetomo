@@ -1484,8 +1484,8 @@ const i18n = {
   }
 };
 
-// Auto-detect language from browser
-const browserLang = (navigator.language || 'ja').split('-')[0];
+// Auto-detect language from browser (use preferred website language, not Chrome UI language)
+const browserLang = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ja').split('-')[0];
 const isJapanese = browserLang === 'ja';
 let currentLang = isJapanese ? 'ja' : 'en';
 
